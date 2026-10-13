@@ -125,6 +125,10 @@ async function showChanges() {
 }
 async function showChange(id) {
   const change = await api(teamPath('/changes/' + id)); collaboration.change = change;
+  if (collaboration.working?.id === id && ['merged','closed'].includes(change.status)) {
+    if (JSON.stringify(projectPayload()) !== platform.lastSaved) { showSaveConflict(); return; }
+    applyProject(await api(teamPath()));
+  }
   if (collaboration.working?.id === id && JSON.stringify(projectPayload()) !== platform.lastSaved && change.revision !== collaboration.working.revision) { showSaveConflict(); return; }
   const mine = change.authorId === platform.user.id; const open = !['merged','closed'].includes(change.status);
   const changes = diffFields(change.before,change.after);

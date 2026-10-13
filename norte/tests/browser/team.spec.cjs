@@ -35,6 +35,9 @@ test('editor salva rascunho e envia proposta sem chamar o salvamento oficial (tr
   await expect.poll(()=>working?.after.requirements[0].text).toBe('O sistema deve preservar a proposta da equipe.'); expect(officialWrites).toBe(0);
   await page.locator('[data-team=my-change]').click(); const form=page.locator('[data-team-form=submit]'); await form.getByLabel('Título da proposta').fill('Ajustar requisito de telemetria'); await form.getByLabel('Motivo').fill('Precisar o comportamento esperado'); await form.getByRole('button',{name:'Enviar para revisão'}).click(); await expect(page.locator('.change-meta')).toContainText('Em revisão');
   await expect(page.locator('.change-after')).toContainText(['O sistema deve preservar a proposta da equipe.']); await page.screenshot({path:'test-results/team-proposal.png'}); expect(officialWrites).toBe(0);
+  const incorporated={...working,status:'merged',mergedVersion:4}; working=null; row.version=4; row.payload=incorporated.after;
+  await page.route('**/api/projects/'+PROJECT+'/changes/'+CHANGE,route=>route.fulfill({json:incorporated}));
+  await page.locator('[data-team=my-change]').click(); await expect(page.locator('.change-meta')).toContainText('Incorporada'); expect(await page.evaluate(()=>collaboration.working)).toBeNull(); expect(await page.evaluate(()=>platform.current.version)).toBe(4);
 });
 test('revisor confere e aprova a versão, sem botões de editar ou incorporar (transporte simulado)',async({page})=>{
   const row=project('reviewer'); const proposal={id:CHANGE,authorId:EDITOR,authorName:'Colaboradora',title:'Melhorar texto',description:'',baseVersion:3,revision:2,status:'open',before:{text:'Original'},after:{text:'<script>window.compromised=true</script>'},reviews:[]};let decision;
