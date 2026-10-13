@@ -5,6 +5,20 @@ async function publicAccount(page) {
   await page.route('**/api/bootstrap',route => route.fulfill({json:{csrfToken:'synthetic',configured:true,authEmailReady:true,user:null,offer:null}}));
   await page.goto('/'); await expect.poll(() => page.evaluate(() => platform.configured)).toBe(true);
 }
+test('clicar em entrar antes do bootstrap aguarda a conta sem mostrar configuração ausente',async ({page}) => {
+  let release; const ready = new Promise(resolve => { release = resolve; });
+  await page.route('**/api/bootstrap',async route => { await ready; await route.fulfill({json:{csrfToken:'synthetic',configured:true,authEmailReady:true,user:{id:'00000000-0000-4000-8000-000000000001'},entitlements:{tier:'essential',limits:{projects:1,requirements:50,verifications:20,generations:0},generationsUsed:0}}}); });
+  await page.route('**/api/projects',route => route.fulfill({json:[]}));
+  try { await page.goto('/'); await page.locator('#account-button').click(); await expect(page.locator('#account-page')).toBeHidden(); release(); await expect(page.getByRole('heading',{name:'Meus projetos',exact:true})).toBeVisible(); await expect(page.locator('#account-page')).not.toContainText('aguardando configuração'); } finally { release(); }
+});
+test('preços abertos antes do bootstrap carregam sem exigir nova seleção',async ({page}) => {
+  let release; const ready = new Promise(resolve => { release = resolve; });
+  await page.route('**/api/bootstrap',async route => { await ready; await route.fulfill({json:{csrfToken:'synthetic',configured:true,authEmailReady:true,user:null}}); });
+  await page.route('**/api/events',route => route.fulfill({json:{ok:true}}));
+  const quote = {version:1,eligibleCents:89000,humanCents:0,discountCents:0,setupCents:0,oneTimeCents:89000,feedbackApplied:false};
+  await page.route('**/api/quote',route => route.fulfill({json:{quote,available:false}}));
+  try { await page.goto('/'); await page.evaluate(()=>goConfigure()); await page.getByText('Para meu projeto',{exact:true}).click(); await expect(page.locator('#price-summary')).toContainText('Conferindo a configuração'); release(); await expect(page.locator('.quote-total')).toContainText('890,00'); await expect(page.locator('#continue-order')).toBeDisabled(); } finally { release(); }
+});
 test('navegação à direita e nome editável no exemplo, sem gravar dados no navegador',async ({page}) => {
   await page.setViewportSize({width:1440,height:900}); await page.goto('/'); await page.getByRole('button',{name:'Explorar a plataforma',exact:true}).click();
   const nav = await page.locator('.eng-navigation').boundingBox(); const main = await page.locator('#req-module').boundingBox(); expect(nav.x).toBeGreaterThan(main.x + main.width);

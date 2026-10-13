@@ -2,6 +2,7 @@ let commercialQuote = null;
 let commercialToken = '';
 let commercialTimer;
 let commercialKey = '';
+let commercialRevision = 0;
 OFFER.services.none = {name:'Sem serviço avulso',price:0,delivery:'Somente software selecionado'};
 const originalNormalizePlan = normalizePlan;
 normalizePlan = function(input = {}) { return {...originalNormalizePlan(input),subscription:input.subscription === true}; };
@@ -13,20 +14,22 @@ renderPlanFields = function() {
   if (quotePlan.mode !== 'test') { el('plan-fields').querySelector('.n-first-order')?.remove(); const label = el('plan-fields').querySelector('.n-discount-label'); if (label) { label.textContent = 'Campanha na parcela elegível'; } el('plan-fields').insertAdjacentHTML('afterbegin',`<label class="n-check"><input type="checkbox" data-choice="subscription" ${quotePlan.subscription ? 'checked' : ''}><span>Software Profissional<small>Assinatura separada dos serviços e da revisão humana. Disponibilidade após validação operacional.</small></span></label>`); }
 };
 renderPrice = function() {
+  const revision = ++commercialRevision;
   clearTimeout(commercialTimer); commercialQuote = null; commercialToken = ''; el('continue-order').disabled = true;
   if (quotePlan.mode === 'test') { el('price-summary').innerHTML = '<h3>Aurora · exploração gratuita</h3><p class="platform-note">Sem conta para navegar. Crie uma conta para salvar seu projeto no Essencial. O teste avançado de 14 dias é ativado separadamente.</p>'; el('continue-order').textContent = 'Abrir Aurora'; el('continue-order').disabled = false; return; }
   el('price-summary').innerHTML = '<p>Conferindo a configuração…</p>'; el('continue-order').textContent = 'Continuar com esta configuração'; el('continue-caption').textContent = 'A próxima etapa confirma contato e valores. Nenhum pagamento é processado.';
   commercialTimer = setTimeout(async () => {
     try {
+      await platform.ready; if (revision !== commercialRevision) { return; }
       if (!platform.configured) { throw new Error('A oferta aguarda configuração e validação operacional.'); }
-      const selection = commercialSelection(); const selected = JSON.stringify(selection); const result = await api('/api/quote','POST',selection); if (selected !== JSON.stringify(commercialSelection())) { return; }
+      const selection = commercialSelection(); const selected = JSON.stringify(selection); const result = await api('/api/quote','POST',selection); if (revision !== commercialRevision || selected !== JSON.stringify(commercialSelection())) { return; }
       if (result.available) { commercialQuote = result.quote; commercialToken = result.quoteToken; } const q = result.quote;
       const lines = [priceLine('Serviços e adicionais',cents(q.eligibleCents)),q.humanCents ? priceLine('Revisão humana',cents(q.humanCents),'Escopo e disponibilidade a confirmar') : '',q.discountCents ? priceLine('Desconto aplicado','− ' + cents(q.discountCents),'Somente nos serviços elegíveis') : '',q.setupCents ? priceLine('Implantação',cents(q.setupCents),q.infrastructurePending ? 'Sujeita a avaliação' : '') : ''].join('');
       const monthly = [q.renewalCents ? priceLine('Software · primeira mensalidade',cents(q.firstMonthlyCents),`${q.discountPercent}% de desconto na primeira mensalidade`) + priceLine('A partir do segundo mês',cents(q.renewalCents)) : '',q.infrastructureMonthlyCents ? priceLine('Hospedagem mensal',cents(q.infrastructureMonthlyCents),'Separada da assinatura') : ''].join('');
       const availability = result.available ? 'Válida até ' + new Date(q.validUntil).toLocaleDateString('pt-BR') + '. Sem cobrança automática.' : 'Prévia de valores. A contratação está em preparação.';
       el('price-summary').innerHTML = `<h3>Sua configuração</h3><div class="n-price-lines">${lines}</div><div class="quote-total"><span>Total avulso</span><strong>${cents(q.oneTimeCents)}</strong></div>${monthly ? `<div class="n-price-lines">${monthly}</div>` : ''}<div class="quote-availability">${icon('info')}<p>${availability}</p></div>${q.feedbackApplied ? '<p class="platform-note">Benefício da avaliação de uso aplicado.</p>' : ''}`;
       el('continue-order').disabled = !result.available; el('continue-order').textContent = result.available ? 'Continuar com esta configuração' : 'Contratação em preparação';
-    } catch (error) { el('price-summary').textContent = error.message; el('continue-order').disabled = true; }
+    } catch (error) { if (revision === commercialRevision) { el('price-summary').textContent = error.message; el('continue-order').disabled = true; } }
   },250);
 };
 postEvent = async function(event) { const mapping = {continue:'continue',selection_changed:'selection_changed',defer:'defer',abandon:'abandon'}; if (!platform.configured || !mapping[event.type]) { return false; } try { await api('/api/events','POST',{type:mapping[event.type]}); return true; } catch { return false; } };

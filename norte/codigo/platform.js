@@ -38,6 +38,7 @@ function authPage(mode = 'login') {
   el('account-page').classList.add('account-page--auth');
 }
 async function projectsPage() {
+  await platform.ready;
   if (!platform.user) { authPage(); return; }
   if (platform.current && !await flushProject()) { return; }
   await refreshAccount(); platform.projects = await api('/api/projects');
@@ -166,6 +167,7 @@ window.addEventListener('click',event => {
   if (button) {
     event.preventDefault(); event.stopImmediatePropagation(); const action = button.dataset.platform; const id = button.dataset.id;
     (async () => {
+      await platform.ready;
       if (action === 'account' || action === 'projects') { await projectsPage(); }
       if (['login','signup','recover'].includes(action)) { el('platform-dialog')?.close(); authPage(action); }
       if (action === 'rename-current' && await flushProject()) { renameCurrentProject(); }
@@ -212,7 +214,8 @@ openSource = function(key,back) {
   setPanel('source',panelHeading('Referência','', 'source-back') + body + footer);
 };
 async function startPlatform() {
-  try { await refreshAccount(); } catch { message('Não foi possível conectar às contas. O Aurora continua disponível.',true); }
+  platform.ready = refreshAccount().catch(() => { message('Não foi possível conectar às contas. O Aurora continua disponível.',true); });
+  await platform.ready;
   const query = new URLSearchParams(location.search);
   if (location.pathname === '/auth/confirm' && query.has('token_hash')) { const input = {token_hash:query.get('token_hash'),type:query.get('type') || 'signup'}; history.replaceState({},'','/'); try { const result = await api('/api/auth/confirm','POST',input); await refreshAccount(); if (result.recovery) { accountView('<h1>Definir nova senha</h1><form class="platform-form" data-platform-form="password"><label>Nova senha<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label><button class="button primary">Salvar senha</button></form>'); } else { await projectsPage(); } } catch (error) { authPage(); platformError(error); } }
   setInterval(() => { if (platform.current && !platform.conflict && (!platform.retryAt || Date.now() > platform.retryAt)) { flushProject().catch(platformError); } },1800);
