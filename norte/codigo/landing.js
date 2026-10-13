@@ -296,6 +296,7 @@ function toggleChat() {
   chat.hidden = !chat.hidden;
   el('chat-launcher').setAttribute('aria-expanded', String(!chat.hidden));
   if (!chat.hidden) { el('chat-question').focus({preventScroll: true}); }
+  else { el('chat-launcher').focus({preventScroll: true}); }
 }
 function handleLandingClick(event) {
   const button = event.target.closest('[data-norte]');

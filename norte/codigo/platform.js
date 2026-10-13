@@ -21,17 +21,21 @@ async function refreshAccount() {
   el('service-contact').textContent = 'Responsável pelo serviço: ' + (result.serviceOwner || 'configuração pendente') + '. Contato de privacidade: ' + (result.privacyContact || 'configuração pendente') + '.';
   return result;
 }
-function accountView(content) { closePanel(true); el('home').hidden = true; el('workspace').hidden = true; el('account-page').hidden = false; el('account-page').innerHTML = content + '<p id="platform-error" class="platform-error" role="alert"></p>'; el('account-page').querySelector('h1')?.focus(); }
+function accountView(content) { closePanel(true); state.view = 'account'; document.body.classList.remove('workspace-mode'); document.documentElement.classList.remove('workspace-mode'); el('home').hidden = true; el('workspace').hidden = true; el('account-page').className = 'account-page'; el('account-page').hidden = false; el('account-page').innerHTML = content + '<p id="platform-error" class="platform-error" role="alert"></p>'; el('account-page').querySelector('h1')?.focus(); }
 const platformOldShowView = showView;
 showView = function(view) { el('account-page').hidden = true; platformOldShowView(view); };
 function authPage(mode = 'login') {
   if (platform.user && mode === 'login') { projectsPage().catch(platformError); return; }
   const recovery = mode === 'recover'; const signup = mode === 'signup';
   const title = recovery ? 'Recuperar acesso' : signup ? 'Criar conta' : 'Entrar na Norte';
-  const fields = `<label>E-mail<input name="email" type="email" autocomplete="email" required maxlength="200"></label>${recovery ? '' : '<label>Senha<input name="password" type="password" minlength="12" maxlength="128" autocomplete="' + (signup ? 'new-password' : 'current-password') + '" required></label><p class="platform-note">Use pelo menos 12 caracteres.</p>'}`;
+  const password = `<label class="auth-password"><span>Senha</span><span class="auth-password-field"><input name="password" type="password" minlength="12" maxlength="128" autocomplete="${signup ? 'new-password' : 'current-password'}" placeholder="${signup ? 'Crie sua senha' : 'Sua senha'}" required><button type="button" data-platform="password-visibility" aria-pressed="false" aria-label="Mostrar senha">Mostrar</button></span></label>${signup ? '<p class="auth-hint">Pelo menos 12 caracteres.</p>' : '<button type="button" class="text-button auth-recover" data-platform="recover">Esqueci minha senha</button>'}`;
+  const fields = `<label>E-mail<input name="email" type="email" autocomplete="email" placeholder="voce@empresa.com" required maxlength="200"></label>${recovery ? '' : password}`;
   const emailPending = (recovery || signup) && !platform.authEmailReady;
   const form = emailPending ? '<p>O envio de e-mails está sendo preparado. Novos cadastros e recuperação de senha estarão disponíveis em breve. Contas já confirmadas podem entrar.</p>' : `<form class="platform-form" data-platform-form="${mode}">${fields}<button class="button primary">${title}</button></form>`;
-  accountView(`<h1 tabindex="-1">${title}</h1><div class="platform-card">${platform.configured ? form : '<p>O serviço de contas está aguardando configuração. Você pode explorar o Aurora.</p>'}<div class="platform-actions"><button class="text-button" data-platform="login">Entrar</button><button class="text-button" data-platform="signup">Criar conta</button><button class="text-button" data-platform="recover">Recuperar acesso</button><button class="text-button" data-action="workspace">Explorar Aurora</button></div></div>`);
+  const subtitle = recovery ? 'Enviaremos um link para você definir uma nova senha.' : signup ? 'Um espaço para organizar e acompanhar seu projeto.' : 'Continue de onde seu projeto parou.';
+  const tabs = recovery ? '<button class="text-button auth-back" data-platform="login">' + icon('back') + 'Voltar para entrar</button>' : `<div class="auth-tabs" role="group" aria-label="Acesso à conta"><button data-platform="login" aria-pressed="${!signup}">Entrar</button><button data-platform="signup" aria-pressed="${signup}">Criar conta</button></div>`;
+  accountView(`<div class="auth-layout"><section class="auth-card"><div class="auth-mark">${icon('compass')}</div><h1 tabindex="-1">${title}</h1><p class="auth-subtitle">${subtitle}</p>${tabs}${platform.configured ? form : '<p class="platform-note">O serviço de contas está aguardando configuração. Você pode explorar o Aurora.</p>'}</section><button class="text-button auth-explore" data-action="workspace">Explorar a plataforma${icon('arrow')}</button></div>`);
+  el('account-page').classList.add('account-page--auth');
 }
 async function projectsPage() {
   if (!platform.user) { authPage(); return; }
@@ -82,16 +86,21 @@ async function flushProject() {
 }
 function platformDialog(title,body) {
   el('platform-dialog')?.remove(); const dialog = document.createElement('dialog'); dialog.id = 'platform-dialog'; dialog.className = 'platform-dialog';
-  dialog.innerHTML = `<h2>${safe(title)}</h2>${body}<p id="dialog-error" class="platform-error" role="alert"></p><div class="platform-actions"><button class="text-button" data-platform="close-dialog">Fechar</button></div>`; document.body.append(dialog); dialog.showModal(); return dialog;
+  dialog.setAttribute('aria-labelledby','dialog-title'); dialog.innerHTML = `<div class="dialog-heading"><h2 id="dialog-title">${safe(title)}</h2><button type="button" class="icon-button" data-platform="close-dialog" aria-label="Fechar">${icon('close')}</button></div><div class="platform-dialog-body">${body}<p id="dialog-error" class="platform-error" role="alert"></p></div>`; document.body.append(dialog); dialog.showModal(); dialog.querySelector('.platform-dialog-body input,.platform-dialog-body button,.platform-dialog-body a')?.focus(); return dialog;
 }
 function showSaveConflict() { platformDialog('Preservar alterações', '<p>Seu rascunho não foi salvo. Baixe uma cópia antes de recarregar a versão do servidor.</p><div class="platform-actions"><button class="button secondary" data-platform="draft-export">Baixar meu rascunho</button><button class="button primary" data-platform="reload">Recarregar versão salva</button></div>'); }
-function projectManagement(action,id) {
-  const p = platform.projects.find(item => item.id === id); if (!p) { return; }
+function projectManagement(action,id,returnToWorkspace = false) {
+  const p = platform.current?.id === id ? platform.current : platform.projects.find(item => item.id === id); if (!p) { return; }
   const input = ['rename','delete','duplicate'].includes(action) ? `<label>${action === 'delete' ? 'Digite o nome exato para confirmar a exclusão' : 'Nome'}<input name="name" required maxlength="160" value="${action === 'delete' ? '' : safe(p.name + (action === 'duplicate' ? ' · cópia' : ''))}"></label>` : '<p>O projeto ficará disponível para leitura e exportação.</p>';
-  platformDialog({rename:'Renomear projeto',delete:'Excluir projeto',duplicate:'Duplicar projeto',archive:'Arquivar projeto'}[action],`<form class="platform-form" data-platform-form="manage" data-id="${id}" data-action="${action}" data-version="${p.version}">${input}<button class="button primary">Confirmar ${action === 'delete' ? 'exclusão' : 'alteração'}</button></form>`);
+  platformDialog({rename:'Nome do projeto',delete:'Excluir projeto',duplicate:'Duplicar projeto',archive:'Arquivar projeto'}[action],`<form class="platform-form" data-platform-form="manage" data-id="${id}" data-action="${action}" data-version="${p.version}" data-workspace="${returnToWorkspace}">${input}<button class="button primary">${action === 'delete' ? 'Confirmar exclusão' : 'Salvar alteração'}</button></form>`);
 }
+function renameCurrentProject() {
+  if (platform.current) { projectManagement('rename',platform.current.id,true); return; }
+  platformDialog('Nome do projeto',`<form class="platform-form" data-platform-form="demo-name"><label>Nome<input name="name" value="${safe(project.name)}" required maxlength="160"></label><p class="platform-note">A alteração neste exemplo fica nesta aba. Entre na sua conta para salvar um projeto.</p><button class="button primary">Salvar nome</button></form>`);
+}
+function refreshProjectName() { el('workspace').querySelector('.eng-project strong').textContent = project.name; if (engineering.module === 'schedule') { renderSchedule(); } message(project.name + ' · ' + engineering.profile); }
 async function generateSaved(format,documents,review) {
-  if (!platform.current) { platformDialog('Exemplos do Aurora','<p>Exemplos gerados com os dados públicos da demonstração. Crie uma conta para gerar documentos com os seus dados.</p><div class="platform-actions">' + ['REQ','RTM','CRN'].map(id => `<a class="button secondary" href="/assets/examples/${id}.pdf" download>${id} · exemplo PDF</a>`).join('') + '</div><button class="text-button" data-platform="signup">Criar conta</button>'); return; }
+  if (!platform.current) { const examples = [['REQ','Requisitos'],['RTM','Rastreabilidade'],['CRN','Cronograma']]; platformDialog('Documentos do Aurora','<p class="dialog-intro">Conheça as entregas com os dados do exemplo.</p><div class="sample-downloads">' + examples.map(([id,title]) => `<a href="/assets/examples/${id}.pdf" download><span class="sample-icon">${icon('file')}</span><span><strong>${title}</strong><small>${id} · PDF</small></span>${icon('download')}</a>`).join('') + '</div><div class="dialog-callout"><div><strong>Pronto para o seu projeto?</strong><p>Crie uma conta para gerar seus documentos.</p></div><button class="button primary" data-platform="signup">Criar conta' + icon('arrow') + '</button></div>'); return; }
   if (!await flushProject()) { showSaveConflict(); return; }
   const signature = JSON.stringify([platform.current.id,platform.current.version,format,documents,review]);
   if (platform.draftGeneration?.signature !== signature) { platform.draftGeneration = {signature,key:crypto.randomUUID()}; }
@@ -131,7 +140,16 @@ window.addEventListener('submit',event => {
   (async () => {
     if (['login','signup','recover'].includes(kind)) { const result = await api('/api/auth/' + kind,'POST',data); if (kind === 'login') { await refreshAccount(); await projectsPage(); } else { el('platform-error').textContent = result.message; } }
     if (kind === 'new') { applyProject(await api('/api/projects','POST',data)); await refreshAccount(); }
-    if (kind === 'manage') { await api('/api/projects/' + form.dataset.id + '/manage','POST',{action:form.dataset.action,version:Number(form.dataset.version),...(data.name ? {name:data.name} : {})}); if (platform.current?.id === form.dataset.id) { platform.current = null; } el('platform-dialog').close(); await projectsPage(); }
+    if (kind === 'manage') {
+      const inWorkspace = form.dataset.workspace === 'true' && form.dataset.action === 'rename' && platform.current?.id === form.dataset.id;
+      if (inWorkspace && !await flushProject()) { return; }
+      const version = inWorkspace ? platform.current.version : Number(form.dataset.version);
+      await api('/api/projects/' + form.dataset.id + '/manage','POST',{action:form.dataset.action,version,...(data.name ? {name:data.name.trim()} : {})});
+      el('platform-dialog').close();
+      if (inWorkspace) { platform.current = await api('/api/projects/' + form.dataset.id); project.name = platform.current.name; refreshProjectName(); setSaveState('Salvo'); }
+      else { if (platform.current?.id === form.dataset.id) { platform.current = null; } await projectsPage(); }
+    }
+    if (kind === 'demo-name') { const name = String(data.name || '').trim(); if (!name) { throw new Error('Informe o nome do projeto.'); } project.name = name; el('platform-dialog').close(); refreshProjectName(); }
     if (kind === 'feedback') { await api('/api/feedback','POST',data); el('platform-dialog').close(); message('Avaliação registrada. Obrigado por informar sua experiência.'); }
     if (kind === 'mfa') { await api('/api/auth/mfa/verify','POST',{factorId:form.dataset.id,code:data.code}); el('platform-dialog').close(); await refreshAccount(); message('Segundo fator confirmado.'); }
     if (kind === 'password') { await api('/api/auth/password','POST',data); await refreshAccount(); authPage(); }
@@ -149,7 +167,9 @@ window.addEventListener('click',event => {
     event.preventDefault(); event.stopImmediatePropagation(); const action = button.dataset.platform; const id = button.dataset.id;
     (async () => {
       if (action === 'account' || action === 'projects') { await projectsPage(); }
-      if (['login','signup','recover'].includes(action)) { authPage(action); }
+      if (['login','signup','recover'].includes(action)) { el('platform-dialog')?.close(); authPage(action); }
+      if (action === 'rename-current' && await flushProject()) { renameCurrentProject(); }
+      if (action === 'password-visibility') { const input = button.closest('form').querySelector('[name=password]'); const visible = input.type === 'password'; input.type = visible ? 'text' : 'password'; button.textContent = visible ? 'Ocultar' : 'Mostrar'; button.setAttribute('aria-pressed',String(visible)); button.setAttribute('aria-label',visible ? 'Ocultar senha' : 'Mostrar senha'); }
       if (action === 'new') { newProjectPage(); }
       if (action === 'open') { if (await flushProject()) { applyProject(await api('/api/projects/' + id)); } }
       if (['rename','duplicate','archive','delete'].includes(action)) { projectManagement(action,id); }
@@ -177,15 +197,21 @@ window.addEventListener('click',event => {
   const exports = {'document-pdf':'pdf','document-docx':'docx','download-trace':'csv','download-calendar':'ics','download-project':'json','download-package':'zip','download-review':'zip'};
   if (Object.hasOwn(exports,action || '')) { event.preventDefault(); event.stopImmediatePropagation(); if (action === 'download-project' && platform.current) { flushProject().then(ok => { if (ok) { const link = document.createElement('a'); link.href = '/api/projects/' + platform.current.id + '/export'; link.download = 'norte-projeto.json'; link.click(); } }); return; } const docs = action === 'download-review' ? reviewDocs(engine.dataset.id).map(doc => doc.id) : action === 'download-package' ? currentDocuments().map(doc => doc.id) : [engine.dataset.id || (action === 'download-calendar' ? 'CRN' : 'RTM')]; generateSaved(exports[action],docs,action === 'download-review' ? engine.dataset.id : undefined).catch(platformError); }
 },true);
-function loadDemo() { platform.current = null; platform.lastSaved = ''; requirements = structuredClone(platformDemo.requirements); verifications = structuredClone(platformDemo.verifications); engineering = structuredClone(platformDemo.engineering); settings = structuredClone(platformDemo.settings); Object.assign(project,{name:'Missão Aurora',code:'AUR',phase:'Concepção'}); lifecycle.durations = {}; lifecycle.selectedId = ''; showModule('requirements'); runAnalysis(false); el('workspace').querySelector('.eng-project strong').textContent = project.name; setSaveState('Demonstração · cadastre-se para salvar'); }
+function loadDemo() { platform.current = null; platform.lastSaved = ''; requirements = structuredClone(platformDemo.requirements); verifications = structuredClone(platformDemo.verifications); engineering = structuredClone(platformDemo.engineering); settings = structuredClone(platformDemo.settings); Object.assign(project,{name:'Missão Aurora',code:'AUR',phase:'Concepção'}); lifecycle.durations = {}; lifecycle.selectedId = ''; showModule('requirements'); runAnalysis(false); el('workspace').querySelector('.eng-project strong').textContent = project.name; setSaveState(''); }
 const platformDocuments = renderDocuments;
 renderDocuments = function() { platformDocuments(); const head = el('documents-module').querySelector('.workspace-actions'); if (head && platform.current) { head.insertAdjacentHTML('beforeend','<button class="button secondary" data-platform="files">Arquivos gerados</button><button class="text-button" data-platform="versions">Versões e vínculos</button><button class="text-button" data-platform="sources">Referências adotadas</button>'); } };
 const platformSettings = openSettings;
 openSettings = function() { platformSettings(); const popup = el('analysis-popover'); if (popup && !popup.hidden) { popup.insertAdjacentHTML('beforeend','<p class="platform-note">As checagens acima são determinísticas. A análise técnica por IA exige provedor e projeto autorizados.</p><button class="text-button" data-platform="technical-analysis">Solicitar sugestões de IA</button>'); } };
 const platformSource = openSource;
-openSource = function(key,back) { platformSource(key,back); const source = SOURCES[key]; el('side-panel').querySelectorAll('[data-action="download-source"],[data-engine="download-source"]').forEach(node => node.remove()); const paper = el('side-panel').querySelector('.source-paper'); if (paper) { paper.textContent = source?.explanation || 'Referência disponível como metadados. Original e trecho exato pendentes de conferência.'; } const sourceId = source?.edition?.includes('6105') ? 'nasa-handbook-2016' : source?.edition?.includes('10-06') ? 'ecss-10-06-2009' : source?.edition?.includes('10-02') ? 'ecss-10-02-2018' : source?.edition?.includes('7123') ? 'npr-7123-1d' : source?.edition?.includes('ECSS-E-ST-10C') ? 'ecss-10-2017' : source?.edition?.includes('ECSS-M-ST-10-01') ? 'ecss-m-10-01-2008' : ''; const body = el('side-panel').querySelector('.panel-body'); if (sourceId) { body?.insertAdjacentHTML('beforeend',`<p class="platform-note">Síntese da Norte separada do original. Somente citações conferidas recebem destaque exato.</p><button class="button secondary" data-platform="reader" data-source="${sourceId}" data-citation="${safe(key)}">Consultar original e citações</button>`); } };
+openSource = function(key,back) {
+  const source = SOURCES[key]; if (!source) { return; } platformSource(key,back);
+  const sourceId = source.edition?.includes('6105') ? 'nasa-handbook-2016' : source.edition?.includes('10-06') ? 'ecss-10-06-2009' : source.edition?.includes('10-02') ? 'ecss-10-02-2018' : source.edition?.includes('7123') ? 'npr-7123-1d' : source.edition?.includes('ECSS-E-ST-10C') ? 'ecss-10-2017' : source.edition?.includes('ECSS-M-ST-10-01') ? 'ecss-m-10-01-2008' : '';
+  const body = `<div class="panel-body source-summary"><span class="source-organization">${safe(source.org)}</span><h3>${safe(source.title)}</h3><p class="source-edition">${safe(source.edition)}</p><p class="source-section">${safe(source.section)}</p><div class="source-context"><span>Síntese da Norte</span><p>${safe(source.explanation || 'Consulte a seção indicada na publicação.')}</p></div></div>`;
+  const external = source.url?.startsWith('https://') ? `<a class="button secondary" href="${safe(source.url)}" target="_blank" rel="noopener noreferrer">Consultar fonte${icon('arrow')}</a>` : '';
+  const footer = `<div class="panel-footer">${sourceId ? `<button class="button primary" data-platform="reader" data-source="${sourceId}" data-citation="${safe(key)}">${icon('file')}Consultar publicação${icon('arrow')}</button>` : external}</div>`;
+  setPanel('source',panelHeading('Referência','', 'source-back') + body + footer);
+};
 async function startPlatform() {
-  const hint = document.createElement('p'); hint.className = 'platform-note'; hint.textContent = 'Ajuda automatizada. Não insira dados pessoais ou técnicos. Somente o tópico público é enviado ao provedor.'; el('chat-form').before(hint);
   try { await refreshAccount(); } catch { message('Não foi possível conectar às contas. O Aurora continua disponível.',true); }
   const query = new URLSearchParams(location.search);
   if (location.pathname === '/auth/confirm' && query.has('token_hash')) { const input = {token_hash:query.get('token_hash'),type:query.get('type') || 'signup'}; history.replaceState({},'','/'); try { const result = await api('/api/auth/confirm','POST',input); await refreshAccount(); if (result.recovery) { accountView('<h1>Definir nova senha</h1><form class="platform-form" data-platform-form="password"><label>Nova senha<input type="password" name="password" minlength="12" maxlength="128" required autocomplete="new-password"></label><button class="button primary">Salvar senha</button></form>'); } else { await projectsPage(); } } catch (error) { authPage(); platformError(error); } }

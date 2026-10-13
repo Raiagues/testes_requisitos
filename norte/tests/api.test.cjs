@@ -1,6 +1,7 @@
 const {test} = require('node:test');
 const assert = require('node:assert/strict');
 const request = require('supertest');
+const crypto = require('node:crypto');
 const {createApp} = require('../server/app.cjs');
 const {readConfig} = require('../server/config.cjs');
 const {AppError} = require('../server/errors.cjs');
@@ -20,6 +21,11 @@ function fakeGateway() {
   return {gateway,actions,sent,serviceReads};
 }
 async function bootstrap(app) { const agent = request.agent(app); const init = await agent.get('/api/bootstrap'); return {agent,token:init.body.csrfToken}; }
+test('página publica URLs versionadas pelo conteúdo para atualizar CSS e scripts no navegador',async () => {
+  const app = createApp({config,gateway:null}); const page = await request(app).get('/'); assert.equal(page.status,200);
+  const assets = [...page.text.matchAll(/(?:src|href)="(\/assets\/(?:norte\.css|platform\.js)\?v=([a-f0-9]{12}))"/g)]; assert.equal(assets.length,2);
+  for (const [,url,version] of assets) { const response = await request(app).get(url); assert.equal(response.status,200); assert.equal(crypto.createHash('sha256').update(response.text).digest('hex').slice(0,12),version); }
+});
 test('configuração ausente fecha operações, segredos e arquivos internos',async () => { const app = createApp({config,gateway:null}); for (const path of ['/api/projects','/api/admin','/.env','/.git/config','/server/config.cjs','/templates.json','/assets/../.env']) { const response = await request(app).get(path); assert.ok([403,404,503].includes(response.status),path); assert.doesNotMatch(response.text,/SESSION_ENCRYPTION_KEY|SUPABASE_SECRET_KEY|stack|postgres/); } assert.equal((await request(app).get('/api/health')).status,200); assert.equal((await request(app).get('/api/ready')).status,503); });
 test('CSRF e origem exigidos também no login; Host e X-Forwarded não autorizam',async () => { const fake = fakeGateway(); const app = createApp({config,gateway:fake.gateway}); const {agent,token} = await bootstrap(app); const body = {email:'a@example.invalid',password:'synthetic-password'};
   assert.equal((await agent.post('/api/auth/login').set('Origin',config.siteUrl).send(body)).status,403);

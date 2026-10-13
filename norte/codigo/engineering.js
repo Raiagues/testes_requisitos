@@ -35,8 +35,8 @@ function projectDocuments() {
   }
   return docs.concat(engineering.customDocs).map(item => { const doc = {...item}; doc.pendingReviews = doc.reviews.filter(id => !scheduleList().some(review => review.id === id && review.active)); if (doc.pendingReviews.length) { doc.state += ' · marco pendente de reatribuição'; } const edition = SOURCES[doc.source]?.edition || ''; const id = edition.includes('6105') ? 'nasa-handbook-2016' : edition.includes('7123') ? 'npr-7123-1d' : edition.includes('10-06') ? 'ecss-10-06-2009' : edition.includes('10-02') ? 'ecss-10-02-2018' : edition.includes('M-ST-10-01') ? 'ecss-m-10-01-2008' : 'ecss-10-2017'; if (doc.kind === 'norm' && engineering.applicability?.[id]?.decision === 'confirmed') { doc.kind = 'reference'; } return doc; });
 }
-function currentDocuments() {
-  return projectDocuments().filter(doc => (!engineering.docReview || doc.reviews.includes(engineering.docReview)) && (!engineering.docKind || doc.kind === engineering.docKind) && (!engineering.docQuery || norm(doc.title + ' ' + doc.code + ' ' + doc.clause).includes(norm(engineering.docQuery))));
+function currentDocuments(ignoreKind = false) {
+  return projectDocuments().filter(doc => (!engineering.docReview || doc.reviews.includes(engineering.docReview)) && (ignoreKind || !engineering.docKind || doc.kind === engineering.docKind) && (!engineering.docFlow || doc.flow === engineering.docFlow) && (!engineering.docQuery || norm(doc.title + ' ' + doc.code + ' ' + doc.clause).includes(norm(engineering.docQuery))));
 }
 function currentDocument(id) { return projectDocuments().find(item => item.id === id); }
 function requirementLinks(items) { return items.map(id => `<button data-engine="linked-requirement" data-id="${safe(id)}">${safe(id)}</button>`).join(''); }
@@ -80,6 +80,7 @@ function setPanel(kind, content, focus = true) {
   const wasOpen = !panel.hidden;
   if (!wasOpen) { lastFocus = document.activeElement; }
   state.panel = kind;
+  panel.dataset.kind = kind;
   panel.hidden = false;
   panel.innerHTML = content;
   panel.setAttribute('aria-labelledby', 'panel-title');
@@ -95,11 +96,15 @@ function closePanel(force = false) {
     setPanel('unsaved', panelHeading('Salvar alterações?', state.selectedId) + body + footer);
     return;
   }
+  const wasReview = state.panel === 'lifecycle-review';
+  const reviewFocus = wasReview ? {id:lifecycle.selectedId,profile:lifecycle.selectedProfile || engineering.profile} : null;
   state.panel = '';
   el('side-panel').hidden = true;
   el('side-panel').innerHTML = '';
   el('shell').classList.remove('has-panel');
   renderTable();
+  if (wasReview) { lifecycle.selectedId = ''; lifecycle.selectedProfile = ''; if (engineering.module === 'schedule') { renderSchedule(); } }
+  if (reviewFocus) { lastFocus = [...document.querySelectorAll('.life-marker')].find(node => node.dataset.id === reviewFocus.id && node.dataset.profile === reviewFocus.profile); }
   if (lastFocus && document.contains(lastFocus)) { lastFocus.focus({preventScroll: true}); }
 }
 function openDetail(id) {
@@ -141,6 +146,7 @@ function returnFromSource() {
   if (sourceReturn?.panel === 'document') { openDocument(sourceReturn.id); }
   else if (sourceReturn?.panel === 'verification') { openVerification(sourceReturn.verification); }
   else if (sourceReturn?.panel === 'detail') { state.selectedId = sourceReturn.selected; renderDetail(); }
+  else if (sourceReturn?.panel === 'lifecycle-review') { renderLifeReview(); }
   else { closePanel(true); }
   const body = el('side-panel').querySelector('.panel-body');
   if (body) { body.scrollTop = sourceReturn?.scroll || 0; }
@@ -329,17 +335,22 @@ function renderDocuments() {
   const reviews = scheduleList();
   const filterOptions = reviews.map(review => `<option value="${safe(review.id)}" ${engineering.docReview === review.id ? 'selected' : ''}>${safe(labelReview(review.id))}${review.active ? '' : ' · fora do plano'}</option>`).join('');
   const header = `<div class="workspace-head"><div><h1>Documentos</h1><p class="eng-subtitle">Entregas do projeto, organizadas por revisão.</p></div><div class="workspace-actions">${profileControl()}<div class="eng-anchor"><button class="button secondary" data-engine="company-document-form">${icon('plus')}Documento da equipe</button><div id="company-document-popover" class="eng-popover eng-popover-wide" hidden></div></div><div class="eng-anchor"><button class="button primary" data-engine="downloads">${icon('download')}Baixar documentos</button><div id="documents-downloads" class="eng-popover eng-download-menu" hidden></div></div></div></div>`;
-  const filters = `<div class="filterbar"><label class="search-field">${icon('search')}<input id="documents-search" type="search" placeholder="Buscar documento" value="${safe(engineering.docQuery)}" aria-label="Buscar documento"></label><select id="documents-review" aria-label="Filtrar por revisão"><option value="">Todas as revisões</option>${filterOptions}</select><select id="documents-kind" aria-label="Filtrar obrigatoriedade"><option value="">Todas as categorias</option><option value="norm" ${engineering.docKind === 'norm' ? 'selected' : ''}>Aplicação a confirmar</option><option value="reference" ${engineering.docKind === 'reference' ? 'selected' : ''}>Exigido pela referência adotada</option><option value="company" ${engineering.docKind === 'company' ? 'selected' : ''}>Exigido pela empresa</option><option value="optional" ${engineering.docKind === 'optional' ? 'selected' : ''}>Opcional</option></select></div><div class="eng-summary-line"><span id="documents-summary"></span><span>Conteúdo acompanha as alterações do projeto</span></div>`;
+  const flows = [['','Entradas e saídas'],['input','Documentos de entrada'],['output','Registros de saída']].map(([value,label]) => `<option value="${value}" ${engineering.docFlow === value ? 'selected' : ''}>${label}</option>`).join('');
+  const filters = `<div class="filterbar"><label class="search-field">${icon('search')}<input id="documents-search" type="search" placeholder="Buscar por nome ou código" value="${safe(engineering.docQuery)}" aria-label="Buscar documento"></label><select id="documents-review" aria-label="Filtrar por revisão"><option value="">Todas as revisões</option>${filterOptions}</select><select id="documents-flow" aria-label="Filtrar entrada ou saída">${flows}</select><button class="text-button" data-engine="clear-document-filters">Limpar</button></div><div class="document-chips" id="document-kind-filters" aria-label="Filtrar por categoria"></div><div class="eng-summary-line"><span id="documents-summary" role="status"></span></div>`;
   const table = '<div class="eng-scroll eng-table-wrap"><table class="eng-table"><colgroup><col><col style="width:230px"><col style="width:183px"><col style="width:130px"></colgroup><thead><tr><th>Documento</th><th>Revisões</th><th>Obrigatoriedade</th><th>Arquivo</th></tr></thead><tbody id="documents-rows"></tbody></table><div class="eng-blank" id="documents-empty" hidden>Nenhum documento neste filtro.</div></div>';
-  const note = '<p class="eng-doc-foot">A aplicação depende da referência adotada, do contrato e das adaptações aprovadas. Os arquivos são rascunhos do projeto. A categoria descreve o conteúdo exigido, não obriga um arquivo separado.</p>';
+  const note = '<details class="document-category-note"><summary>Sobre as categorias</summary><p>A aplicação depende da referência adotada, do contrato e das adaptações aprovadas. Os arquivos são rascunhos do projeto. A categoria descreve o conteúdo exigido, não obriga um arquivo separado.</p></details>';
   el('documents-module').innerHTML = header + filters + table + note;
   renderDocumentRows();
 }
 function renderDocumentRows() {
   const docs = currentDocuments();
+  const available = currentDocuments(true);
+  const activeKind = document.activeElement?.dataset.engine === 'document-kind' ? document.activeElement.dataset.kind : null;
+  el('document-kind-filters').innerHTML = [['','Todos'],['norm','A confirmar'],['reference','Referência adotada'],['company','Da empresa'],['optional','Opcionais']].map(([kind,label]) => `<button data-engine="document-kind" data-kind="${kind}" aria-pressed="${(engineering.docKind || '') === kind}">${label}<span>${kind ? available.filter(doc => doc.kind === kind).length : available.length}</span></button>`).join('');
   el('documents-rows').innerHTML = docs.map(doc => `<tr data-engine="document-detail" data-id="${safe(doc.id)}" tabindex="0" aria-label="Abrir ${safe(doc.title)}"><td><div class="eng-document-cell"><span class="eng-doc-icon">${icon('file')}</span><span><span class="eng-cell-title">${safe(doc.title)}</span><span class="eng-cell-subtitle"><span class="mono">${safe(doc.code)}</span> · ${safe(doc.state)}${doc.flow === 'output' ? ' · após a revisão' : ''}</span></span></div></td><td>${doc.reviews.length ? doc.reviews.map(id => `<span class="eng-doc-review" title="${scheduleList().find(r => r.id === id)?.active ? 'Revisão no plano' : 'Revisão fora do plano atual'}">${safe(labelReview(id))}</span>`).join('') : '<span class="eng-muted">Sem revisão atribuída</span>'}</td><td>${docBadge(doc.kind)}</td><td><div class="eng-doc-actions"><button class="eng-download-mini" data-engine="document-pdf" data-id="${safe(doc.id)}" aria-label="Baixar PDF de ${safe(doc.title)}">${icon('download')}PDF</button><button class="icon-button" data-engine="document-detail" data-id="${safe(doc.id)}" aria-label="Ver documento">${icon('chevron')}</button></div></td></tr>`).join('');
   el('documents-empty').hidden = docs.length > 0;
-  el('documents-summary').textContent = `${docs.length} documentos · ${engineering.profile} · versão 0.${engineering.version}`;
+  el('documents-summary').textContent = `${docs.length} de ${projectDocuments().length} documentos · ${engineering.profile}`;
+  if (activeKind !== null) { [...el('document-kind-filters').querySelectorAll('button')].find(button => button.dataset.kind === activeKind)?.focus({preventScroll:true}); }
 }
 function blocksHTML(blocks) {
   return blocks.map(block => {
@@ -465,6 +476,8 @@ function handleEngineeringClick(event) {
   else if (action === 'verification-edit') { verificationForm(id); }
   else if (action === 'verification-cancel') { if (verificationDraft?.id) { openVerification(verificationDraft.id); } else { closePanel(true); } }
   else if (action === 'document-detail') { openDocument(id); }
+  else if (action === 'document-kind') { engineering.docKind = button.dataset.kind || ''; renderDocumentRows(); }
+  else if (action === 'clear-document-filters') { engineering.docKind = ''; engineering.docQuery = ''; engineering.docReview = ''; engineering.docFlow = ''; renderDocuments(); el('documents-search').focus(); }
   else if (action === 'document-pdf') { const doc = currentDocument(id); if (doc) { downloadBlob(buildEngineeringPDF(doc), doc.code + '.pdf'); message('PDF gerado com a versão atual do projeto.'); } }
   else if (action === 'document-docx') { const doc = currentDocument(id); if (doc) { downloadBlob(buildEngineeringDocx(doc), doc.code + '.docx'); message('Word editável gerado com a versão atual do projeto.'); } }
   else if (action === 'company-document-form') { companyDocumentForm(); }
@@ -478,7 +491,7 @@ function handleEngineeringClick(event) {
   else if (action === 'expand-review') { engineering.expandedReview = engineering.expandedReview === id ? '' : id; preserveScheduleRender(); }
   else if (action === 'generate-schedule') { generateSchedule(); }
   else if (action === 'schedule-document') { openDocument('CRN'); }
-  else if (action === 'documents-for-review') { engineering.docReview = id; engineering.docKind = ''; engineering.docQuery = ''; showModule('documents'); }
+  else if (action === 'documents-for-review') { engineering.docReview = id; engineering.docKind = ''; engineering.docQuery = ''; engineering.docFlow = ''; showModule('documents'); }
 }
 function handleEngineeringChange(event) {
   const input = event.target;
@@ -488,6 +501,7 @@ function handleEngineeringChange(event) {
   else if (input.id === 'verification-status') { engineering.verStatus = input.value; renderVerificationRows(); }
   else if (input.id === 'documents-review') { engineering.docReview = input.value; renderDocumentRows(); }
   else if (input.id === 'documents-kind') { engineering.docKind = input.value; renderDocumentRows(); }
+  else if (input.id === 'documents-flow') { engineering.docFlow = input.value; renderDocumentRows(); }
   else if (input.matches('[data-review-toggle]')) {
     const review = scheduleList().find(item => item.id === input.dataset.reviewToggle);
     review.active = input.checked;

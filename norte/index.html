@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Entenda o que seu projeto precisa atender, como verificar cada requisito e o que entregar em cada revisão. Conecte normas, testes, documentos e cronograma em um só lugar.">
 <title>Norte · O norte do seu projeto espacial</title>
-<link rel="stylesheet" href="/assets/norte.css">
+<link rel="stylesheet" href="/assets/norte.css?v=97615d17fd50">
 </head>
 <body>
 <svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
@@ -90,7 +90,7 @@
 </section>
 <section id="account-page" class="account-page" hidden></section>
 <section class="workspace" id="workspace" hidden>
-<div class="eng-navigation"><div class="eng-project"><span class="eng-project-mark"><svg><use href="#i-compass"/></svg></span><div><strong>Missão Aurora</strong><span>Engenharia de sistemas</span></div></div><nav class="eng-nav" aria-label="Áreas do projeto"><button data-engine="module" data-module="requirements" aria-current="page"><svg><use href="#i-layers"/></svg>Requisitos</button><button data-engine="module" data-module="verification"><svg><use href="#i-check"/></svg>Verificação</button><button data-engine="module" data-module="documents"><svg><use href="#i-file"/></svg>Documentos</button><button data-engine="module" data-module="schedule"><svg><use href="#i-clock"/></svg>Cronograma</button></nav><span class="eng-session" id="save-state" role="status">Projeto de demonstração</span><button class="text-button" data-platform="projects">Meus projetos</button></div>
+<aside class="eng-navigation" aria-label="Navegação do projeto"><div class="eng-project"><span class="eng-project-mark"><svg><use href="#i-compass"/></svg></span><div><span class="project-eyebrow">PROJETO</span><strong>Missão Aurora</strong></div><button class="icon-button project-rename" data-platform="rename-current" aria-label="Editar nome do projeto" title="Editar nome do projeto"><svg><use href="#i-pencil"/></svg></button></div><nav class="eng-nav" aria-label="Áreas do projeto"><button data-engine="module" data-module="requirements" aria-current="page"><svg><use href="#i-layers"/></svg>Requisitos</button><button data-engine="module" data-module="verification"><svg><use href="#i-check"/></svg>Verificação</button><button data-engine="module" data-module="documents"><svg><use href="#i-file"/></svg>Documentos</button><button data-engine="module" data-module="schedule"><svg><use href="#i-clock"/></svg>Cronograma</button></nav><div class="project-navigation-footer"><span class="eng-session" id="save-state" role="status"></span><button class="text-button" data-platform="projects"><svg><use href="#i-grid"/></svg>Meus projetos</button></div></aside>
 <section id="req-module" class="eng-module">
 <div class="workspace-head"><div><h1>Requisitos</h1><p class="eng-subtitle">Da origem à verificação, em um só registro.</p></div><div class="workspace-actions"><div class="eng-anchor"><button class="button secondary" data-action="settings" id="analysis-config-button" aria-expanded="false"><svg><use href="#i-sliders"/></svg>Configurar análise</button><div id="analysis-popover" class="eng-popover" hidden></div></div><div class="eng-anchor"><button class="button secondary" data-engine="add-requirement" id="add-req-button" aria-expanded="false"><svg><use href="#i-plus"/></svg>Adicionar requisito</button><div id="requirement-popover" class="eng-popover eng-popover-wide" hidden></div></div><button class="button primary" data-action="analyse-all"><svg><use href="#i-check"/></svg>Analisar</button></div></div>
 <div class="filterbar"><label class="search-field"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="Buscar requisito ou ID" aria-label="Buscar requisito ou ID"></label><label class="filter-control"><span>Subsistema</span><select id="filter-subsystem" aria-label="Filtrar por subsistema"><option value="">Todos</option></select></label><label class="filter-control"><span>Resultado</span><select id="filter-status" aria-label="Filtrar por resultado"><option value="">Todos</option><option value="issues">Com apontamentos</option><option value="regulatory">Revisão regulatória</option><option value="clear">Sem alertas</option><option value="pending">A analisar</option></select></label><div class="eng-anchor"><button class="icon-button" data-action="filters" aria-label="Mais filtros"><svg><use href="#i-sliders"/></svg></button><div id="filters-popover" class="eng-popover" hidden></div></div></div>
@@ -108,26 +108,27 @@
 </div>
 <footer class="statusbar"><span id="status-message" role="status" aria-live="polite">Norte · Engenharia de requisitos</span><button class="text-button" data-action="about"><svg><use href="#i-info"/></svg>Sobre a análise</button></footer>
 </div>
-<script src="/assets/data.js" defer></script>
-<script src="/assets/catalogue.js" defer></script>
-<script src="/assets/pricing.js" defer></script>
-<script src="/assets/pdf.js" defer></script>
-<script src="/assets/app.js" defer></script>
-<script src="/assets/landing.js" defer></script>
+<script src="/assets/data.js?v=22553d0129e8" defer></script>
+<script src="/assets/catalogue.js?v=a1ba552ec2d7" defer></script>
+<script src="/assets/pricing.js?v=ef0586d1cb57" defer></script>
+<script src="/assets/pdf.js?v=f64ddd49aa4c" defer></script>
+<script src="/assets/app.js?v=599bf681cd37" defer></script>
+<script src="/assets/landing.js?v=f498f3a04b38" defer></script>
 <button type="button" class="n-chat-launcher" id="chat-launcher" data-norte="chat-toggle" aria-expanded="false" aria-controls="norte-chat"><svg><use href="#i-chat"/></svg>Ajuda</button>
 <section class="n-chat" id="norte-chat" aria-label="Ajuda Norte" hidden>
-<div class="n-chat-header"><div><strong>Ajuda Norte</strong><small>Respostas rápidas sobre o serviço</small></div><button type="button" class="icon-button" data-norte="chat-close" aria-label="Fechar ajuda"><svg><use href="#i-close"/></svg></button></div>
-<div class="n-chat-body" id="chat-body" role="log" aria-live="polite"><p class="n-chat-message">Qual parte você quer entender?</p></div>
+<div class="n-chat-header"><span class="chat-mark"><svg><use href="#i-compass"/></svg></span><div><strong>Ajuda Norte</strong><small>Um caminho para sua próxima etapa</small></div><button type="button" class="icon-button" data-norte="chat-close" aria-label="Fechar ajuda"><svg><use href="#i-close"/></svg></button></div>
+<div class="n-chat-body" id="chat-body" role="log" aria-live="polite"><div class="chat-welcome"><span>PODEMOS AJUDAR</span><h2>Por onde começamos?</h2><p>Escolha um assunto ou escreva sua dúvida sobre a Norte.</p></div></div>
 <div class="n-chat-quick"><button data-norte="chat-question">O que recebo?</button><button data-norte="chat-question">Quem revisa?</button><button data-norte="chat-question">Dados e acesso</button><button data-norte="chat-question">Preço e desconto</button><button data-norte="chat-question">Prazos</button></div>
 <form class="n-chat-form" id="chat-form"><input type="text" id="chat-question" aria-label="Sua pergunta" placeholder="Ou escreva sua dúvida" maxlength="500" autocomplete="off"><button type="submit" class="icon-button" aria-label="Enviar pergunta"><svg><use href="#i-arrow"/></svg></button></form>
+<p class="chat-privacy">Só o assunto é enviado à IA. Evite dados pessoais e do projeto.</p>
 </section>
 
-<script src="/assets/engineering-data.js" defer></script>
-<script src="/assets/engineering-export.js" defer></script>
-<script src="/assets/engineering.js" defer></script>
-<script src="/assets/lifecycle.js" defer></script>
-<script src="/assets/platform.js" defer></script>
-<script src="/assets/pdf-viewer.js" defer></script>
-<script src="/assets/commerce.js" defer></script>
+<script src="/assets/engineering-data.js?v=cd4a4a58cc86" defer></script>
+<script src="/assets/engineering-export.js?v=bb8534c236db" defer></script>
+<script src="/assets/engineering.js?v=eba3db01f3bd" defer></script>
+<script src="/assets/lifecycle.js?v=afa517dd509c" defer></script>
+<script src="/assets/platform.js?v=7d479a8be866" defer></script>
+<script src="/assets/pdf-viewer.js?v=b7190acef0f4" defer></script>
+<script src="/assets/commerce.js?v=04d35218261f" defer></script>
 </body>
 </html>

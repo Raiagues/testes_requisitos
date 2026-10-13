@@ -88,7 +88,7 @@ function lifeSymbol(marker) {
 function lifeSVG(compare = lifecycle.compare, downloadable = false) {
   const m = lifeGraphModel(compare, downloadable);
   const ranges = lifeRanges();
-  let svg = `<svg class="life-chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${m.width} ${m.height}" role="group" aria-label="Cronograma da missão Aurora por fase, atividade e revisão">`;
+  let svg = `<svg class="life-chart" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${m.width} ${m.height}" role="group" aria-label="Cronograma de ${safe(project.name)} por fase, atividade e revisão">`;
   if (downloadable) { svg += '<style>.life-phase{fill:#f0efe8}.life-separator,.life-stem{stroke:#dedcd3;stroke-width:1}.life-grid{stroke:#dedcd3;stroke-dasharray:3 4}.life-text{fill:#292c29}.life-muted{fill:#74746b}.life-band{fill:#ede3d8;opacity:.7}.life-symbol{stroke-width:1.6}.life-nasa .life-symbol{fill:#fffefa;stroke:#526d77}.life-nasa .life-marker-label{fill:#526d77}.life-ecss .life-symbol{fill:#946346;stroke:#946346}.life-ecss .life-marker-label{fill:#946346}.life-hit{fill:none;stroke:none}.life-marker-label{font-size:12px;font-weight:600}.life-guide{stroke:#987c62;stroke-dasharray:4 4;opacity:.4}.life-guide-label{fill:#74746b;font-size:10.5px}text{font-family:Arial,sans-serif}</style><rect width="100%" height="100%" fill="#fffefa"/>'; }
   svg += `<rect class="life-phase" x="0" y="0" width="${m.width}" height="${m.top}"/><text class="life-muted" x="21" y="29" font-size="10.5" letter-spacing="1.1">ATIVIDADES</text><text class="life-text" x="21" y="53" font-size="13.5" font-weight="550">Ciclo de vida da missão</text>`;
   ranges.forEach((phase, index) => {
@@ -138,7 +138,7 @@ function lifeGlossary() {
 }
 function lifeDeliveries(docs) {
   if (!docs.length) { return '<p class="life-note">Nenhum documento associado a esta revisão.</p>'; }
-  return docs.map(doc => `<div class="eng-delivery-item"><button data-engine="document-detail" data-id="${safe(doc.id)}"><strong>${safe(doc.title)}</strong><small>${safe(doc.code)}</small></button>${docBadge(doc.kind)}<button class="icon-button" data-engine="document-pdf" data-id="${safe(doc.id)}" aria-label="Baixar ${safe(doc.title)} em PDF">${icon('download')}</button></div>`).join('');
+  return docs.map(doc => `<div class="eng-delivery-item" data-life-kind="${safe(doc.kind)}" data-document-search="${safe(norm(doc.title + ' ' + doc.code))}"><button data-engine="document-detail" data-id="${safe(doc.id)}"><strong>${safe(doc.title)}</strong><small>${safe(doc.code)}</small></button><div class="delivery-category">${docBadge(doc.kind)}</div><button class="icon-button" data-engine="document-pdf" data-id="${safe(doc.id)}" aria-label="Baixar ${safe(doc.title)} em PDF">${icon('download')}</button></div>`).join('');
 }
 function lifeReviewDetail() {
   if (!lifecycle.selectedId) { return ''; }
@@ -148,42 +148,57 @@ function lifeReviewDetail() {
   const isReference = profile !== engineering.profile;
   const phase = lifePhaseOf(review, profile);
   const source = profile === 'NASA' ? 'nasaCriteria' : 'ecssLifecycle';
-  const head = `<div class="life-detail-head"><div class="life-detail-heading"><span class="life-detail-code">${safe(labelReview(review.id))}</span><div><h2>${safe(review.title)}</h2><p>${safe(review.english)} · ${profile} · ${phase.code === 'Pré-A' ? 'Pré-A' : 'Fase ' + phase.code}</p></div></div><div class="life-detail-actions">${isReference ? '' : `<button class="button secondary" data-engine="download-review" data-id="${safe(review.id)}">${icon('download')}Baixar pacote</button>`}<button class="icon-button" data-engine="life-close" aria-label="Fechar detalhes da revisão">${icon('close')}</button></div></div>`;
+  const head = `<div class="life-detail-head"><div class="life-detail-heading"><span class="life-detail-code">${safe(labelReview(review.id))}</span><div><h2 id="panel-title" tabindex="-1">${safe(review.title)}</h2><p>${profile} · ${phase.code === 'Pré-A' ? 'Pré-A' : 'Fase ' + phase.code}</p></div></div><button class="icon-button" data-engine="life-close" aria-label="Fechar detalhes da revisão">${icon('close')}</button></div>`;
   if (isReference) { return `<section class="life-detail" id="life-review-detail">${head}<div class="life-detail-content"><div class="life-reference"><p>${safe(review.focus)} Este marco pertence ao perfil ${profile}, exibido somente para comparação. Os documentos do projeto continuam no perfil ${engineering.profile}.</p><button class="button secondary" data-engine="life-use-profile" data-profile="${profile}" data-id="${safe(review.id)}">Usar ${profile} no projeto${icon('arrow')}</button></div><button class="text-button" data-action="source" data-source="${source}">${icon('file')}Consultar a referência</button></div></section>`; }
   const input = reviewDocs(review.id, 'input'), output = reviewDocs(review.id, 'output');
   const docs = [...input, ...output];
-  const counts = ['norm', 'company', 'optional'].map(kind => `${docs.filter(doc => doc.kind === kind).length} ${kind === 'norm' ? 'com aplicação a confirmar' : kind === 'company' ? 'da empresa' : 'opcionais'}`).join(' · ');
+  const counts = [['norm','A confirmar'],['reference','Referência adotada'],['company','Da empresa'],['optional','Opcionais']].map(([kind,label]) => { const count = docs.filter(doc => doc.kind === kind).length; return count ? `<button type="button" data-engine="life-filter" data-kind="${kind}" aria-pressed="${lifecycle.docKind === kind}"><span>${count}</span>${label}</button>` : ''; }).join('');
   const prepDate = addDays(review.date, -review.prepDays), closeDate = addDays(review.date, review.closeDays);
   const phaseNote = phase.index !== review.phase ? '<p class="life-reference">A data escolhida está fora da fase usada como referência para esta revisão. Confirme esta adaptação com a equipe.</p>' : '';
   const periods = `<div class="life-periods"><div class="life-period"><label>Preparar <input type="number" data-life="prep" data-id="${safe(review.id)}" value="${review.prepDays}" min="1" max="90" aria-label="Dias de preparação"> dias antes</label><strong>A partir de ${engDate(prepDate)}</strong></div><div class="life-period primary"><label for="life-review-date">Realizar a revisão</label><input type="date" id="life-review-date" data-life="date" data-id="${safe(review.id)}" value="${safe(review.date)}"></div><div class="life-period"><label>Fechar ações em <input type="number" data-life="close" data-id="${safe(review.id)}" value="${review.closeDays}" min="1" max="90" aria-label="Dias para fechar as ações"> dias</label><strong>Até ${engDate(closeDate)}</strong></div></div>`;
-  const footer = `<div class="life-detail-footer"><span>A aplicação depende da adoção da referência e das decisões do projeto. A associação de documentos não representa aprovação.</span><button class="text-button" data-action="source" data-source="${source}">${icon('file')}Critérios da revisão</button></div>`;
-  return `<section class="life-detail" id="life-review-detail">${head}<div class="life-detail-content">${phaseNote}${periods}<p class="life-package-count"><strong>${docs.length} documentos associados</strong> · ${counts}</p><div class="eng-delivery-columns"><section class="eng-delivery-group"><h4>DOCUMENTOS DE ENTRADA · ${input.length} DOCUMENTOS</h4>${lifeDeliveries(input)}</section><section class="eng-delivery-group"><h4>REGISTROS DE SAÍDA · ${output.length} REGISTROS</h4>${lifeDeliveries(output)}<p class="life-note">Preencher decisões, responsáveis e ações depois da reunião.</p><button class="text-button" data-engine="documents-for-review" data-id="${safe(review.id)}">Ver todos em Documentos${icon('arrow')}</button></section></div></div>${footer}</section>`;
+  const footer = `<div class="life-detail-footer"><button class="text-button" data-action="source" data-source="${source}">${icon('file')}Critérios da revisão</button><button class="button primary" data-engine="download-review" data-id="${safe(review.id)}">${icon('download')}Baixar pacote</button></div>`;
+  const filters = `<div class="life-document-heading"><h3>Documentos <span>${docs.length}</span></h3><button class="text-button" data-engine="documents-for-review" data-id="${safe(review.id)}">Ver na lista${icon('arrow')}</button></div><div class="document-chips life-document-chips" aria-label="Filtrar documentos da revisão"><button data-engine="life-filter" data-kind="" aria-pressed="${!lifecycle.docKind}">Todos</button>${counts}</div><label class="life-document-search">${icon('search')}<input type="search" id="life-document-search" placeholder="Buscar nesta revisão" aria-label="Buscar documentos nesta revisão" value="${safe(lifecycle.docQuery || '')}"></label><p id="life-filter-count" class="life-filter-count" role="status"></p>`;
+  return `<section class="life-detail" id="life-review-detail">${head}<div class="life-detail-content">${phaseNote}${periods}${filters}<div class="eng-delivery-columns"><section class="eng-delivery-group"><h4>DOCUMENTOS DE ENTRADA</h4>${lifeDeliveries(input)}</section><section class="eng-delivery-group"><h4>REGISTROS DE SAÍDA</h4>${lifeDeliveries(output)}</section></div><p id="life-documents-empty" class="life-note" hidden>Nenhum documento encontrado. Altere a busca ou a categoria.</p></div>${footer}</section>`;
+}
+function filterLifeDocuments() {
+  const detail = el('life-review-detail'); if (!detail) { return; }
+  const rows = [...detail.querySelectorAll('[data-life-kind]')]; let shown = 0;
+  for (const row of rows) { row.hidden = Boolean(lifecycle.docKind && row.dataset.lifeKind !== lifecycle.docKind || lifecycle.docQuery && !row.dataset.documentSearch.includes(norm(lifecycle.docQuery))); row.classList.toggle('document-highlight',!row.hidden && Boolean(lifecycle.docKind)); if (!row.hidden) { shown += 1; } }
+  detail.querySelectorAll('[data-engine="life-filter"]').forEach(button => button.setAttribute('aria-pressed',String(button.dataset.kind === (lifecycle.docKind || ''))));
+  detail.querySelectorAll('.eng-delivery-group').forEach(group => { group.hidden = ![...group.querySelectorAll('[data-life-kind]')].some(row => !row.hidden); });
+  if (el('life-filter-count')) { el('life-filter-count').textContent = `${shown} de ${rows.length} documentos`; el('life-documents-empty').hidden = shown > 0; }
+}
+function renderLifeReview(focus = true) {
+  const content = lifeReviewDetail(); if (!content) { if (state.panel === 'lifecycle-review') { closePanel(true); } return; }
+  const scroll = el('side-panel').querySelector('.life-detail-content')?.scrollTop || 0;
+  setPanel('lifecycle-review',content,focus); filterLifeDocuments();
+  if (!focus) { el('side-panel').querySelector('.life-detail-content').scrollTop = scroll; }
 }
 function renderSchedule() {
   const reviews = lifeReviews().filter(review => review.active);
   const header = `<div class="workspace-head"><div><h1>Cronograma</h1><p class="eng-subtitle">Fases, atividades e revisões da missão.</p></div><div class="workspace-actions"><button class="button secondary" data-engine="life-settings" aria-expanded="${lifecycle.settings}">${icon('sliders')}Ajustar cronograma</button><button class="button primary" data-engine="schedule-document">${icon('file')}Documento do cronograma</button></div></div>`;
-  const toolbar = `<div class="life-toolbar"><div class="life-title"><strong>${safe(project.name)}</strong><span>${reviews.length} revisões · selecione um marco</span></div><div class="life-tools">${profileControl()}<label class="life-toggle"><input type="checkbox" data-life="compare" ${lifecycle.compare ? 'checked' : ''}>Comparar ${engineering.profile === 'NASA' ? 'ECSS' : 'NASA'}</label></div></div>`;
+  const toolbar = `<div class="life-toolbar"><div class="life-title"><strong>${safe(project.name)}</strong><span>${reviews.length} revisões</span></div><div class="life-tools">${profileControl()}<label class="life-toggle"><input type="checkbox" data-life="compare" ${lifecycle.compare ? 'checked' : ''}>Comparar ${engineering.profile === 'NASA' ? 'ECSS' : 'NASA'}</label></div></div>`;
   const legend = `<div class="life-legend"><div class="life-legend-items">${lifecycle.compare ? lifeKey('ECSS') + lifeKey('NASA') : lifeKey(engineering.profile)}<span>Faixas · atividades planejadas</span></div><button class="text-button" data-engine="life-glossary" aria-expanded="${lifecycle.glossary}">${lifecycle.glossary ? 'Ocultar siglas' : 'Significado das siglas'}${icon('chevron')}</button></div>`;
   const board = `<section class="life-board">${toolbar}<div class="life-plot">${lifeSVG()}</div>${legend}${lifeGlossary()}</section>`;
-  const note = `<p class="life-note">Fases em largura igual, sem escala de duração.${lifecycle.compare ? ' Datas do perfil ' + engineering.profile + '. A comparação é por fase, não uma equivalência entre revisões.' : ' As datas são ajustáveis e não são prazos da norma.'} <button data-action="source" data-source="${engineering.profile === 'NASA' ? 'nasaLifecycle' : 'ecssLifecycle'}">Referência do ciclo de vida</button></p>`;
-  const selected = lifeReviewDetail();
-  const hint = `<div class="life-hint"><div>${icon('file')}<p><strong>Selecione uma revisão no diagrama.</strong> Veja as datas e os documentos que entram e saem dela.</p></div><button class="text-button" data-engine="life-select" data-id="PDR" data-profile="${engineering.profile}">Abrir PDR${icon('arrow')}</button></div>`;
-  el('schedule-module').innerHTML = header + `<div class="life-scroll" id="schedule-scroll">${lifeSettings()}${board}${note}${selected}</div>`;
+  el('schedule-module').innerHTML = header + `<div class="life-scroll" id="schedule-scroll">${lifeSettings()}${board}</div>`;
+  if (state.panel === 'lifecycle-review') { renderLifeReview(false); }
 }
 function preserveScheduleRender() {
   const node = el('schedule-scroll');
   const top = node?.scrollTop || 0;
+  const focused = document.activeElement?.dataset.life;
   renderSchedule();
   el('schedule-scroll').scrollTop = top;
+  if (focused) { el('side-panel').querySelector(`[data-life="${focused}"]`)?.focus({preventScroll:true}); }
 }
 function lifeSelect(profile, id) {
   lifecycle.selectedProfile = profile;
   lifecycle.selectedId = id;
+  lifecycle.docKind = ''; lifecycle.docQuery = '';
   lifecycle.settings = false;
   engineering.expandedReview = profile === engineering.profile ? id : '';
   preserveScheduleRender();
-  const detail = el('life-review-detail');
-  if (detail) { const scroll = el('schedule-scroll'); const y = detail.offsetTop - scroll.offsetTop; scroll.scrollTo({top: Math.max(0, y - 20), behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth'}); }
+  renderLifeReview();
 }
 function lifeApplyDates() {
   const start = el('schedule-start').value;
@@ -205,7 +220,8 @@ function handleLifecycleAction(button) {
   const action = button.dataset.engine;
   if (action === 'life-settings') { lifecycle.settings = !lifecycle.settings; preserveScheduleRender(); if (lifecycle.settings) { el('schedule-scroll').scrollTo({top: 0, behavior: 'smooth'}); } }
   else if (action === 'life-select') { lifeSelect(button.dataset.profile || engineering.profile, button.dataset.id); }
-  else if (action === 'life-close') { lifecycle.selectedId = ''; lifecycle.selectedProfile = ''; preserveScheduleRender(); }
+  else if (action === 'life-close') { closePanel(true); }
+  else if (action === 'life-filter') { lifecycle.docKind = button.dataset.kind || ''; filterLifeDocuments(); }
   else if (action === 'life-glossary') { lifecycle.glossary = !lifecycle.glossary; preserveScheduleRender(); }
   else if (action === 'life-apply') { lifeApplyDates(); }
   else if (action === 'life-reset') { lifeReviews().forEach(review => { review.active = REVIEW_PROFILES[engineering.profile].find(item => item.id === review.id).active; review.changed = false; }); changeEngineering('Seleção inicial de revisões restaurada'); preserveScheduleRender(); }
@@ -242,6 +258,7 @@ function handleLifecycleChange(event) {
 }
 // Teclado também seleciona os marcos do desenho.
 document.addEventListener('keydown', event => { if ((event.key === 'Enter' || event.key === ' ') && event.target.matches('.life-marker')) { event.preventDefault(); lifeSelect(event.target.dataset.profile, event.target.dataset.id); } });
+document.addEventListener('input',event => { if (event.target.id === 'life-document-search') { lifecycle.docQuery = event.target.value; filterLifeDocuments(); } });
 // A exportação usa o mesmo posicionamento do diagrama.
 function lifePDFPolygon(pdf, points, color, outline = false) {
   const path = points.map((point, index) => `${point[0].toFixed(2)} ${(pdf.height - point[1]).toFixed(2)} ${index ? 'l' : 'm'}`).join(' ');
