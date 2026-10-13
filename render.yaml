@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: norte
+    name: testes-requisitos
     runtime: docker
     plan: free
     repo: https://github.com/Raiagues/testes_requisitos

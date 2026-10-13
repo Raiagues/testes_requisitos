@@ -50,3 +50,9 @@ Código enviado para [Raiagues/testes_requisitos, main](https://github.com/Raiag
 O Render recusou o campo `services[0].maxShutdownDelaySeconds` durante a criação do Blueprint no plano gratuito. Removido somente esse campo opcional para usar o prazo padrão da plataforma, preservando `plan: free`, as variáveis e os controles existentes. Nenhum recurso pago foi solicitado. A configuração corrigida deve ser carregada novamente no painel do Render; a publicação ainda depende das configurações externas descritas em `CONFIGURACAO_FINAL.md`.
 
 Correção enviada em `6a0c18ffddfbaca8d19554f535d0d0c3db5edca9`, com [CI aprovada](https://github.com/Raiagues/testes_requisitos/actions/runs/38398212516). A captura posterior do usuário mostra a revisão da configuração e oferece associar o serviço `norte` existente. Orientada essa associação, seguida da conferência das variáveis em Environment; não há URL publicada confirmada nesta execução.
+
+## 2026-10-13 — separação dos protótipos
+
+O usuário esclareceu que o serviço Render `norte` pertence a outro protótipo e confirmou ter aplicado a associação sugerida anteriormente. A orientação de associar sem confirmar a identidade do serviço foi incorreta. Por solicitação explícita, as alterações seguintes ficam restritas ao repositório `Raiagues/testes_requisitos`; não se tenta restaurar, excluir ou editar o outro protótipo.
+
+Alterado somente o nome do serviço no Blueprint, de `norte` para `testes-requisitos`. Plano Free, raiz `norte`, Docker, variáveis e proteções permanecem iguais. Corrigidos os guias para configurar exclusivamente esse novo serviço e um Supabase separado; documentados os sete valores, as migrações, confirmação de e-mail e aprovação comercial. A remoção da definição antiga não desfaz configurações que o Render possa já ter aplicado. Sem conexão ao painel/API, o estado remoto anterior não pôde ser verificado.

@@ -31,9 +31,15 @@ Não armazene `MIGRATION_DATABASE_URL` nem `BACKUP_DATABASE_URL` no serviço web
 
 ## Render
 
-Crie o Blueprint a partir do repositório, preencha as variáveis de [CONFIGURACAO_FINAL.md](CONFIGURACAO_FINAL.md) e faça o deploy manual. `autoDeployTrigger: off` impede que uma atualização ainda não homologada seja publicada automaticamente. O serviço escuta `0.0.0.0:$PORT`.
+Este repositório define somente o serviço **testes-requisitos**, com plano Free. O serviço **norte** que já existia no Render é outro protótipo e não deve ser associado a este repositório, receber suas variáveis ou ser renomeado. A pasta `norte/` continua sendo o diretório do código; isso não determina o nome do serviço no Render.
 
-Se a revisão encontrar o serviço `norte` existente, selecione **Associate existing services** e aplique o Blueprint. O comando de início vazio é esperado, pois o Dockerfile define a inicialização. Confira depois **norte → Environment** e preencha somente os valores obrigatórios ausentes; `sync: false` não adiciona segredos em atualizações de um Blueprint existente. [Variáveis secretas no Blueprint](https://render.com/docs/blueprint-spec#prompting-for-secret-values).
+No Blueprint já ligado a `Raiagues/testes_requisitos`, use **Manual Sync** para carregar o `render.yaml` corrigido se a sincronização ainda não ocorreu. A definição deve criar **testes-requisitos**, sem instruções para atualizar **norte**. Se estiver criando um Blueprint pela primeira vez, use **New → Blueprint**, repositório `Raiagues/testes_requisitos`, branch `main`, caminho `render.yaml` e nome `testes-requisitos`; se houver correspondência com um protótipo diferente, escolha **Create all as new services**. Não crie um segundo Blueprint para um serviço que já esteja gerenciado pelo primeiro.
+
+Abra exclusivamente **testes-requisitos → Environment**, preencha os sete valores de [CONFIGURACAO_FINAL.md](CONFIGURACAO_FINAL.md) e clique em **Save, rebuild, and deploy**. O comando de início vazio é esperado, pois o Dockerfile define a inicialização. `sync: false` não adiciona segredos em atualizações de um Blueprint existente. [Variáveis secretas no Blueprint](https://render.com/docs/blueprint-spec#prompting-for-secret-values).
+
+`autoDeployTrigger: off` desliga deploys automáticos do código do serviço. A sincronização do Blueprint é uma configuração separada do Render e pode aplicar alterações em `render.yaml`. O serviço escuta `0.0.0.0:$PORT`. [Funcionamento dos Blueprints](https://render.com/docs/infrastructure-as-code).
+
+A associação anterior ao serviço `norte`, confirmada pelo usuário, pode já ter aplicado mudanças nele. A remoção dessa definição do Blueprint não restaura configurações anteriores e não exclui o serviço. Não foram executados rollback, exclusão nem alteração de chaves do protótipo antigo; seu estado remoto não foi verificado por falta de acesso ao painel/API.
 
 - Saúde: `/api/health`, sem dados sensíveis.
 - Prontidão: `/api/ready`, verifica configuração e acesso ao banco; precisa responder 200 antes da abertura das contas.
