@@ -60,3 +60,5 @@ A [CI 38398212516](https://github.com/Raiagues/testes_requisitos/actions/runs/38
 ## 2026-10-13 — serviço exclusivo de testes_requisitos
 
 O YAML foi lido com PyYAML e comparado à versão anterior: a única alteração de configuração é `services[0].name`, de `norte` para `testes-requisitos`. Confirmados um único serviço, plano Free e preservação integral das demais opções; `git diff --check` passou. Não foi executada operação na API/painel do Render nem migração em Supabase hospedado. As capturas de login/configurador mostram bloqueios de configuração, não comprovam a conclusão das integrações. Nenhuma autorização ou proteção foi removida para esconder essas pendências.
+
+A [CI 38399889707](https://github.com/Raiagues/testes_requisitos/actions/runs/38399889707) concluiu com sucesso para `b00c4063a5fc5391f9c169abeeeda778278fce56`, incluindo build, check, auditoria/segredos, testes de aplicação, PostgreSQL temporário, navegador e smoke Docker. O arquivo local `.env` foi validado apenas quanto ao formato hexadecimal de 64 caracteres e à permissão 0600; seu conteúdo não foi incluído nos relatórios. Nenhuma integração externa real foi habilitada por essa mudança.

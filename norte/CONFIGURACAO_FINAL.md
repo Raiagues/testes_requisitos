@@ -8,7 +8,7 @@ O código já está em [Raiagues/testes_requisitos, branch main](https://github.
 
 ## Para contas, projetos e documentos persistentes
 
-1. No Supabase, selecione ou crie um projeto exclusivo chamado `testes-requisitos`, no plano gratuito. Em **Settings → Data API**, copie a Project URL; em **Settings → API Keys**, obtenha as chaves Publishable e Secret desse mesmo projeto. Não é necessário girar as chaves do outro Norte.
+1. No Supabase, selecione ou crie um projeto exclusivo chamado `testes-requisitos`, no plano gratuito. No botão **Connect**, copie a Project URL; em **Settings → API Keys**, obtenha as chaves Publishable e Secret desse mesmo projeto. Não é necessário girar as chaves do outro Norte. [Localização das chaves](https://supabase.com/docs/guides/getting-started/api-keys#find-your-keys).
 2. Em **Supabase → Connect → Session pooler**, copie a conexão PostgreSQL com TLS e substitua o marcador da senha pela senha desse banco. Coloque-a em `MIGRATION_DATABASE_URL` no arquivo local e ignorado pelo Git `norte/.env`. Execute `npm run migrate` dentro de `norte/`, uma vez para preparar esse banco. Nunca coloque essa conexão no serviço web. As oito migrações já foram executadas e verificadas em PostgreSQL temporário; a aplicação no Supabase hospedado continua dependendo dessa conexão.
 3. No Render, abra o Blueprint ligado a `Raiagues/testes_requisitos` e use **Manual Sync** se ele ainda não carregou o arquivo corrigido. Abra o novo serviço **testes-requisitos**, mantendo o plano **Free**. A definição corrigida não contém o serviço antigo `norte`. Para uma primeira criação, use **New → Blueprint**, branch `main`, arquivo `render.yaml`; não associe um protótipo diferente. Siga [DEPLOY_RENDER.md](DEPLOY_RENDER.md).
 4. Em **Render → testes-requisitos → Environment → Add Environment Variable**, preencha os sete valores:
@@ -16,7 +16,7 @@ O código já está em [Raiagues/testes_requisitos, branch main](https://github.
 | Nome | Tipo | Valor a obter/configurar |
 | --- | --- | --- |
 | `SITE_URL` | Público | Endereço HTTPS exibido no topo do serviço **testes-requisitos**, sem barra final |
-| `SUPABASE_URL` | Público | Project URL em **Supabase → projeto testes-requisitos → Settings → Data API** |
+| `SUPABASE_URL` | Público | Project URL em **Supabase → projeto testes-requisitos → Connect** |
 | `SUPABASE_PUBLISHABLE_KEY` | Publicável | Chave publicável daquele projeto; RLS continua obrigatório |
 | `SUPABASE_SECRET_KEY` | Segredo | Chave administrativa, exclusivamente no servidor |
 | `SESSION_ENCRYPTION_KEY` | Segredo | 32 bytes aleatórios em 64 caracteres hexadecimais; gerar localmente com `openssl rand -hex 32` |
@@ -26,6 +26,8 @@ O código já está em [Raiagues/testes_requisitos, branch main](https://github.
 `NODE_ENV=production` já consta no Blueprint. `PORT` é fornecida pelo Render. Ausência de configuração impede operações protegidas; a exploração pública do Aurora continua disponível. A oferta comercial também exige responsável e contato preenchidos.
 
 Gere o valor de `SESSION_ENCRYPTION_KEY` no terminal com `openssl rand -hex 32` e copie a saída somente para o Environment desse serviço. Depois de preencher todos os valores, clique em **Save, rebuild, and deploy**. Não use o botão de geração automática de segredo do Render para este campo: a aplicação exige o formato hexadecimal acima.
+
+Nesta máquina, a chave de sessão já foi gerada em `norte/.env`, arquivo privado ignorado pelo Git. Copie somente o valor de `SESSION_ENCRYPTION_KEY` desse arquivo para o campo correspondente do Render; não é necessário gerar outra chave. `MIGRATION_DATABASE_URL` continua em branco para ser preenchida com a conexão do Supabase exclusivo deste protótipo.
 
 O arquivo `norte/.env` precisa conter somente a conexão para essa etapa de migração:
 
