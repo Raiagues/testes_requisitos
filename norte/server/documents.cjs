@@ -1,9 +1,8 @@
-const PDFDocument = require('pdfkit');
 const {Document,Packer,Paragraph,TextRun,Table,TableRow,TableCell,Header,Footer,PageNumber} = require('docx');
 const {zipSync,strToU8} = require('fflate');
-const path = require('node:path');
 const {AppError} = require('./errors.cjs');
-const {enrich,scheduleDiagram} = require('./document-content.cjs');
+const {enrich} = require('./document-content.cjs');
+const {renderPDF:pdf} = require('./pdf-layout.cjs');
 function csvCell(value) { const string = String(value ?? ''); const safe = /^(?:[\t\0]|[\s]*[=+@-])/.test(string) ? "'" + string : string; return '"' + safe.replaceAll('"','""') + '"'; }
 function csv(project) {
   const rows = [['ID','Requisito','Versão','Subsistema','Referência','Verificações'],...project.payload.requirements.map(req => [req.id,req.text,req.version,req.subsystem,req.reference,project.payload.verifications.filter(v => v.requirementIds.includes(req.id)).map(v => v.id).join('; ')])];
@@ -30,51 +29,21 @@ function model(project,id,templates) {
   const title = mapping.title || def?.title || (id.startsWith('ATA-') ? 'Registro e ações da revisão ' : 'Preparação da revisão ') + id.split('-').slice(1).join('-');
   const source = templates.sources[mapping.source];
   const reference = source ? `${source.edition} · ${source.title} · ${mapping.clause || source.section}. Aplicabilidade e correspondência do modelo: a confirmar pela equipe.\nEndereço oficial: ${source.url}` : 'Decisão interna da equipe. Este documento não constitui obrigação de uma norma.';
-  const sections = [{title:'Controle de revisão',body:`Projeto: ${project.name}\nVersão salva: ${project.version} · Modelo Norte 1\nSituação: Rascunho\nResponsável e aprovação: pendentes\nPerfil: ${project.profile}`},{title:'Origem e aplicação',body:reference}];
+  const sections = [{title:'Identificação e controle',headers:['Campo','Registro'],rows:[['Projeto',project.name],['Versão salva',String(project.version) + ' · Modelo Norte 1'],['Situação','Rascunho'],['Responsável e aprovação','Pendentes'],['Referência',project.profile]]},{title:'Origem e aplicação',body:reference}];
   if (['REQ','RTM','ANA','VCD'].includes(id)) {
-    sections.push({title:'Dados do projeto',rows:project.payload.requirements.map(req => [req.id,req.text,`Versão ${req.version} · ${req.subsystem || 'Subsistema pendente'}`,`Critério: ${req.acceptance || 'Pendente'}\nOrigem: ${req.reference || 'Pendente'}\nVerificações: ${project.payload.verifications.filter(v => v.requirementIds.includes(req.id)).map(v => v.id).join(', ') || 'Nenhuma'}`])});
+    sections.push({title:'Dados do projeto',headers:['Requisito','Declaração','Configuração','Critério e rastreabilidade'],rows:project.payload.requirements.map(req => [req.id,req.text,`Versão ${req.version} · ${req.subsystem || 'Subsistema pendente'}`,`Critério: ${req.acceptance || 'Pendente'}\nOrigem: ${req.reference || 'Pendente'}\nVerificações: ${project.payload.verifications.filter(v => v.requirementIds.includes(req.id)).map(v => v.id).join(', ') || 'Nenhuma'}`])});
   } else if (id === 'CRN') {
-    sections.push({title:'Revisões planejadas — datas da equipe',rows:reviews(project).map(review => [project.profile + ' ' + review.id,review.title,review.date,`Preparação: ${review.prepDays} dias\nFechamento: ${review.closeDays} dias`])});
+    sections.push({title:'Revisões planejadas — datas da equipe',headers:['Revisão','Objetivo','Data prevista','Períodos de trabalho'],rows:reviews(project).map(review => [project.profile + ' ' + review.id,review.title,review.date,`Preparação: ${review.prepDays} dias\nFechamento: ${review.closeDays} dias`])});
   } else {
     sections.push({title:'Conteúdo solicitado pela referência',body:`${mapping.maturity || 'Confirmar o conteúdo e a maturidade esperados.'}\nMapeamento orientativo da Norte, condicionado à adoção e à conferência da referência. Não representa um pacote integral aprovado.`});
     sections.push({title:'Dados do projeto',body:def?.body || 'Conteúdo específico ainda não registrado. Definir responsável, dados de entrada e critérios.'});
-    if (['VVP','RES'].includes(id)) { sections.push({title:'Verificações registradas',rows:project.payload.verifications.map(v => [v.id,v.title,`${v.status} · ${v.result}`,`Evidência: ${v.evidence || 'Pendente'}\nCritério: ${v.criteria || 'Pendente'}`])}); }
+    if (['VVP','RES'].includes(id)) { sections.push({title:'Verificações registradas',headers:['Atividade','Descrição','Situação e resultado','Evidência e critério'],rows:project.payload.verifications.map(v => [v.id,v.title,`${v.status} · ${v.result}`,`Evidência: ${v.evidence || 'Pendente'}\nCritério: ${v.criteria || 'Pendente'}`])}); }
     if (reviewDoc) { sections.push({title:'Decisão, ações e fechamento',body:'Preencher após a realização. Não há aprovação, assinatura ou execução presumida.'}); }
   }
   enrich(project,id,sections);
   const adopted = (project.sourceVersions || []).map(s => `${s.code} · ${s.title} · ${s.edition}\nDecisão: ${s.decision} · Responsável: ${s.responsible}\nJustificativa: ${s.rationale}\nSHA-256: ${s.sha256 || 'original pendente'}\nFicha: /api/sources/${s.id}/citations\nOficial: ${s.url}`).join('\n\n');
   sections.push({title:'Complementos da equipe',body:'Registrar adaptações, justificativa, responsável e decisão de aplicabilidade. Entregas sem marco continuam pendentes.'},{title:'Referências e versões adotadas',body:reference + '\n\n' + (adopted || 'Nenhuma adoção registrada. Referências do modelo são orientativas e precisam de conferência. Esta é uma produção da Norte, não uma publicação oficial.')});
   return {id,title,sections};
-}
-async function pdf(project,document) {
-  const fonts = path.join(__dirname,'..','assets','fonts');
-  const pdf = new PDFDocument({size:'A4',margins:{top:58,bottom:58,left:48,right:48},bufferPages:true,info:{Title:document.title,Author:'Norte',Subject:'Rascunho gerado dos dados salvos'}});
-  pdf.registerFont('Norte',path.join(fonts,'DejaVuSans.ttf'));
-  pdf.registerFont('Norte-Bold',path.join(fonts,'DejaVuSans-Bold.ttf'));
-  const chunks = [];
-  const complete = new Promise((resolve,reject) => { pdf.on('data',chunk => chunks.push(chunk)); pdf.on('end',() => resolve(Buffer.concat(chunks))); pdf.on('error',reject); });
-  pdf.font('Norte-Bold').fontSize(19).fillColor('#684d3b').text(document.title);
-  pdf.moveDown().font('Norte').fontSize(10).fillColor('#3b3935').text(`Norte · ${project.name} · Rascunho · v${project.version}`);
-  if (document.id === 'CRN') { pdf.moveDown(); scheduleDiagram(pdf,project); }
-  for (const section of document.sections) {
-    if (pdf.y > 705) { pdf.addPage(); }
-    pdf.moveDown().font('Norte-Bold').fontSize(13).text(section.title);
-    pdf.moveDown(0.4).font('Norte').fontSize(11);
-    if (section.body) { pdf.text(section.body,{lineGap:4}); }
-    if (section.rows) {
-      if (!section.rows.length) { pdf.text('Nenhum registro. Conteúdo pendente.'); }
-      for (const row of section.rows) {
-        if (pdf.y > 660) { pdf.addPage(); pdf.font('Norte-Bold').fontSize(11).text(section.title + ' · continuação'); pdf.moveDown(); }
-        pdf.font('Norte-Bold').fontSize(11).text(row[0]);
-        pdf.font('Norte').text(row.slice(1).join('\n'),{lineGap:4});
-        pdf.moveDown();
-      }
-    }
-  }
-  const pages = pdf.bufferedPageRange();
-  if (pages.count > 300) { throw new AppError('document_page_limit'); }
-  for (let i = 0; i < pages.count; i += 1) { pdf.switchToPage(i); pdf.font('Norte').fontSize(8).fillColor('#6f665e').text(`NORTE / ${document.id} · Rascunho`,48,28,{lineBreak:false}); pdf.text(`v${project.version} · ${i + 1} / ${pages.count}`,48,pdf.page.height - 35,{lineBreak:false}); }
-  pdf.end(); return complete;
 }
 async function word(project,document) {
   const paragraph = (text,bold = false) => new Paragraph({spacing:{after:160},children:[new TextRun({text,bold,font:'DejaVu Sans',size:22})]});

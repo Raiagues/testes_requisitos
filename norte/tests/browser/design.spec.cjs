@@ -57,12 +57,24 @@ test('painel redimensiona o espaço sem perder edição, foco ou o marco selecio
 });
 test('documentos combinam filtros de revisão, categoria, entrada e busca e permitem limpar',async ({page}) => {
   await page.goto('/'); await page.evaluate(() => showModule('documents')); const total = await page.locator('#documents-rows tr').count();
-  await page.getByRole('combobox',{name:'Filtrar por revisão'}).selectOption('TRR'); await expect(page.locator('#documents-rows tr')).toHaveCount(4);
+  await page.getByLabel('Filtrar por revisão',{exact:true}).click(); await page.locator('[data-document-review="TRR"]').check(); await page.keyboard.press('Escape'); await expect(page.locator('#documents-rows tr')).toHaveCount(4);
   await page.locator('#document-kind-filters [data-kind="norm"]').click(); await expect(page.locator('#documents-rows tr')).toHaveCount(2);
   await page.getByRole('combobox',{name:'Filtrar entrada ou saída'}).selectOption('output'); await expect(page.locator('#documents-rows tr')).toHaveCount(1); await expect(page.locator('#documents-rows')).toContainText('Registro e ações');
   await page.getByRole('searchbox',{name:'Buscar documento',exact:true}).fill('ausente'); await expect(page.locator('#documents-empty')).toBeVisible();
   await page.getByRole('button',{name:'Limpar',exact:true}).click(); await expect(page.locator('#documents-rows tr')).toHaveCount(total); await expect(page.locator('#documents-search')).toBeFocused();
   await page.setViewportSize({width:1440,height:900}); await page.screenshot({path:'test-results/design-documents.png'});
+});
+test('filtros aceitam várias revisões e categorias, sem duplicar documentos',async ({page}) => {
+  await page.goto('/'); await page.evaluate(() => showModule('documents'));
+  await page.getByLabel('Filtrar por revisão',{exact:true}).click(); await page.locator('[data-document-review="TRR"]').check(); await page.locator('[data-document-review="PDR"]').check();
+  await expect(page.locator('#documents-review-label')).toHaveText('2 revisões'); await page.keyboard.press('Escape'); await expect(page.getByLabel('Filtrar por revisão',{exact:true})).toBeFocused();
+  await page.locator('#document-kind-filters [data-kind="norm"]').click(); await page.locator('#document-kind-filters [data-kind="company"]').click();
+  await expect(page.locator('#document-kind-filters button[aria-pressed="true"]')).toHaveCount(2);
+  const ids = await page.locator('#documents-rows tr').evaluateAll(rows => rows.map(row => row.dataset.id)); expect(new Set(ids).size).toBe(ids.length); expect(ids).toContain('PROC-PDR'); expect(ids).toContain('PROC-TRR'); expect(ids).toContain('ATA-TRR'); expect(ids).not.toContain('PROC-CDR'); expect(ids).not.toContain('VCD');
+  await page.locator('#document-kind-filters [data-kind="norm"]').click(); await expect(page.locator('#documents-rows')).not.toContainText('Registro e ações');
+  await page.getByLabel('Filtrar por revisão',{exact:true}).click(); await page.locator('[data-document-review="TRR"]').uncheck(); await expect(page.locator('#documents-review-label')).toHaveText('PDR'); await page.keyboard.press('Escape');
+  await expect(page.locator('#documents-rows')).toContainText('Preparação da PDR'); await expect(page.locator('#documents-rows')).not.toContainText('Preparação da TRR');
+  await page.getByRole('button',{name:'Limpar',exact:true}).click(); await expect(page.locator('#documents-review-label')).toHaveText('Todas as revisões');
 });
 test('acesso compacto, ajuda pública e exemplos funcionam sem sobreposição de diálogos',async ({page}) => {
   await page.setViewportSize({width:1440,height:900}); await publicAccount(page);

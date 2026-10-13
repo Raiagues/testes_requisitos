@@ -59,7 +59,7 @@ function applyProject(row) {
   platform.current = row; platform.conflict = false;
   requirements = row.payload.requirements.map(req => ({...createRequirement(req.id,''),...structuredClone(req)}));
   verifications = structuredClone(row.payload.verifications);
-  engineering = {...structuredClone(platformDemo.engineering),...structuredClone(row.payload.engineering),profile:row.payload.engineering.profile || row.profile,start:row.payload.engineering.start || row.start_date,docReview:'',docKind:'',docQuery:'',module:'requirements'};
+  engineering = {...structuredClone(platformDemo.engineering),...structuredClone(row.payload.engineering),profile:row.payload.engineering.profile || row.profile,start:row.payload.engineering.start || row.start_date,docReviews:[],docKinds:[],docQuery:'',module:'requirements'};
   settings = {...platformDemo.settings,...row.payload.settings}; lifecycle.durations = structuredClone(row.payload.lifecycle?.durations || {}); lifecycle.selectedId = ''; lifecycle.selectedProfile = '';
   Object.assign(project,{name:row.name,code:row.name === 'Missão Aurora' ? 'AUR' : 'PRJ',phase:row.phase});
   nextNumber = Math.max(1,...requirements.map(req => Number(req.id.match(/\d+$/)?.[0]) + 1 || 1)); verificationCounter = Math.max(1,...verifications.map(v => Number(v.id.match(/\d+$/)?.[0]) + 1 || 1));

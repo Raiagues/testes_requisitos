@@ -36,8 +36,12 @@ function projectDocuments() {
   return docs.concat(engineering.customDocs).map(item => { const doc = {...item}; doc.pendingReviews = doc.reviews.filter(id => !scheduleList().some(review => review.id === id && review.active)); if (doc.pendingReviews.length) { doc.state += ' · marco pendente de reatribuição'; } const edition = SOURCES[doc.source]?.edition || ''; const id = edition.includes('6105') ? 'nasa-handbook-2016' : edition.includes('7123') ? 'npr-7123-1d' : edition.includes('10-06') ? 'ecss-10-06-2009' : edition.includes('10-02') ? 'ecss-10-02-2018' : edition.includes('M-ST-10-01') ? 'ecss-m-10-01-2008' : 'ecss-10-2017'; if (doc.kind === 'norm' && engineering.applicability?.[id]?.decision === 'confirmed') { doc.kind = 'reference'; } return doc; });
 }
 function currentDocuments(ignoreKind = false) {
-  return projectDocuments().filter(doc => (!engineering.docReview || doc.reviews.includes(engineering.docReview)) && (ignoreKind || !engineering.docKind || doc.kind === engineering.docKind) && (!engineering.docFlow || doc.flow === engineering.docFlow) && (!engineering.docQuery || norm(doc.title + ' ' + doc.code + ' ' + doc.clause).includes(norm(engineering.docQuery))));
+  const reviews = engineering.docReviews || [];
+  const kinds = engineering.docKinds || [];
+  return projectDocuments().filter(doc => (!reviews.length || doc.reviews.some(id => reviews.includes(id))) && (ignoreKind || !kinds.length || kinds.includes(doc.kind)) && (!engineering.docFlow || doc.flow === engineering.docFlow) && (!engineering.docQuery || norm(doc.title + ' ' + doc.code + ' ' + doc.clause).includes(norm(engineering.docQuery))));
 }
+function toggleDocumentFilter(key,value) { const values = new Set(engineering[key] || []); if (values.has(value)) { values.delete(value); } else { values.add(value); } engineering[key] = [...values]; }
+function documentReviewLabel() { const selected = engineering.docReviews || []; return !selected.length ? 'Todas as revisões' : selected.length === 1 ? labelReview(selected[0]) : `${selected.length} revisões`; }
 function currentDocument(id) { return projectDocuments().find(item => item.id === id); }
 function requirementLinks(items) { return items.map(id => `<button data-engine="linked-requirement" data-id="${safe(id)}">${safe(id)}</button>`).join(''); }
 function moduleButton(module, label, name = 'arrow') { return `<button class="text-button" data-engine="module" data-module="${module}">${safe(label)}${icon(name)}</button>`; }
@@ -336,10 +340,10 @@ function saveLinks(event) {
 function profileControl() { return `<label class="eng-profile-label">Referência<select data-engine-profile aria-label="Referência dos documentos e revisões">${optionList(['NASA', 'ECSS', 'CUSTOM'], engineering.profile)}</select></label>`; }
 function renderDocuments() {
   const reviews = scheduleList();
-  const filterOptions = reviews.map(review => `<option value="${safe(review.id)}" ${engineering.docReview === review.id ? 'selected' : ''}>${safe(labelReview(review.id))}${review.active ? '' : ' · fora do plano'}</option>`).join('');
+  const filterOptions = reviews.map(review => `<label><input type="checkbox" data-document-review="${safe(review.id)}" ${(engineering.docReviews || []).includes(review.id) ? 'checked' : ''}><span>${safe(labelReview(review.id))}${review.active ? '' : '<small>Fora do plano</small>'}</span></label>`).join('');
   const header = `<div class="workspace-head"><div><h1>Documentos</h1><p class="eng-subtitle">Entregas do projeto, organizadas por revisão.</p></div><div class="workspace-actions">${profileControl()}<div class="eng-anchor"><button class="button secondary" data-engine="company-document-form">${icon('plus')}Documento da equipe</button><div id="company-document-popover" class="eng-popover eng-popover-wide" hidden></div></div><div class="eng-anchor"><button class="button primary" data-engine="downloads">${icon('download')}Baixar documentos</button><div id="documents-downloads" class="eng-popover eng-download-menu" hidden></div></div></div></div>`;
   const flows = [['','Entradas e saídas'],['input','Documentos de entrada'],['output','Registros de saída']].map(([value,label]) => `<option value="${value}" ${engineering.docFlow === value ? 'selected' : ''}>${label}</option>`).join('');
-  const filters = `<div class="filterbar"><label class="search-field">${icon('search')}<input id="documents-search" type="search" placeholder="Buscar por nome ou código" value="${safe(engineering.docQuery)}" aria-label="Buscar documento"></label><select id="documents-review" aria-label="Filtrar por revisão"><option value="">Todas as revisões</option>${filterOptions}</select><select id="documents-flow" aria-label="Filtrar entrada ou saída">${flows}</select><button class="text-button" data-engine="clear-document-filters">Limpar</button></div><div class="document-chips" id="document-kind-filters" aria-label="Filtrar por categoria"></div><div class="eng-summary-line"><span id="documents-summary" role="status"></span></div>`;
+  const filters = `<div class="filterbar"><label class="search-field">${icon('search')}<input id="documents-search" type="search" placeholder="Buscar por nome ou código" value="${safe(engineering.docQuery)}" aria-label="Buscar documento"></label><details class="document-review-filter" id="documents-review"><summary aria-label="Filtrar por revisão"><span id="documents-review-label">${documentReviewLabel()}</span>${icon('chevron')}</summary><div class="document-review-options"><div class="document-filter-caption">Selecionar revisões<button class="text-button" data-engine="clear-document-reviews">Todas</button></div><fieldset><legend class="sr-only">Revisões dos documentos</legend>${filterOptions}</fieldset></div></details><select id="documents-flow" aria-label="Filtrar entrada ou saída">${flows}</select><button class="text-button" data-engine="clear-document-filters">Limpar</button></div><div class="document-chips" id="document-kind-filters" aria-label="Filtrar por categoria"></div><div class="eng-summary-line"><span id="documents-summary" role="status"></span></div>`;
   const table = '<div class="eng-scroll eng-table-wrap"><table class="eng-table"><colgroup><col><col style="width:230px"><col style="width:183px"><col style="width:130px"></colgroup><thead><tr><th>Documento</th><th>Revisões</th><th>Obrigatoriedade</th><th>Arquivo</th></tr></thead><tbody id="documents-rows"></tbody></table><div class="eng-blank" id="documents-empty" hidden>Nenhum documento neste filtro.</div></div>';
   const note = '<details class="document-category-note"><summary>Sobre as categorias</summary><p>A aplicação depende da referência adotada, do contrato e das adaptações aprovadas. Os arquivos são rascunhos do projeto. A categoria descreve o conteúdo exigido, não obriga um arquivo separado.</p></details>';
   el('documents-module').innerHTML = header + filters + table + note;
@@ -349,7 +353,8 @@ function renderDocumentRows() {
   const docs = currentDocuments();
   const available = currentDocuments(true);
   const activeKind = document.activeElement?.dataset.engine === 'document-kind' ? document.activeElement.dataset.kind : null;
-  el('document-kind-filters').innerHTML = [['','Todos'],['norm','A confirmar'],['reference','Referência adotada'],['company','Da empresa'],['optional','Opcionais']].map(([kind,label]) => `<button data-engine="document-kind" data-kind="${kind}" aria-pressed="${(engineering.docKind || '') === kind}">${label}<span>${kind ? available.filter(doc => doc.kind === kind).length : available.length}</span></button>`).join('');
+  el('document-kind-filters').innerHTML = [['','Todos'],['norm','A confirmar'],['reference','Referência adotada'],['company','Da empresa'],['optional','Opcionais']].map(([kind,label]) => `<button data-engine="document-kind" data-kind="${kind}" aria-pressed="${kind ? (engineering.docKinds || []).includes(kind) : !(engineering.docKinds || []).length}">${label}<span>${kind ? available.filter(doc => doc.kind === kind).length : available.length}</span></button>`).join('');
+  el('documents-review-label').textContent = documentReviewLabel();
   el('documents-rows').innerHTML = docs.map(doc => `<tr data-engine="document-detail" data-id="${safe(doc.id)}" tabindex="0" aria-label="Abrir ${safe(doc.title)}"><td><div class="eng-document-cell"><span class="eng-doc-icon">${icon('file')}</span><span><span class="eng-cell-title">${safe(doc.title)}</span><span class="eng-cell-subtitle"><span class="mono">${safe(doc.code)}</span> · ${safe(doc.state)}${doc.flow === 'output' ? ' · após a revisão' : ''}</span></span></div></td><td>${doc.reviews.length ? doc.reviews.map(id => `<span class="eng-doc-review" title="${scheduleList().find(r => r.id === id)?.active ? 'Revisão no plano' : 'Revisão fora do plano atual'}">${safe(labelReview(id))}</span>`).join('') : '<span class="eng-muted">Sem revisão atribuída</span>'}</td><td>${docBadge(doc.kind)}</td><td><div class="eng-doc-actions"><button class="eng-download-mini" data-engine="document-pdf" data-id="${safe(doc.id)}" aria-label="Baixar PDF de ${safe(doc.title)}">${icon('download')}PDF</button><button class="icon-button" data-engine="document-detail" data-id="${safe(doc.id)}" aria-label="Ver documento">${icon('chevron')}</button></div></td></tr>`).join('');
   el('documents-empty').hidden = docs.length > 0;
   el('documents-summary').textContent = `${docs.length} de ${projectDocuments().length} documentos · ${engineering.profile}`;
@@ -391,7 +396,7 @@ function saveCompanyDocument(event) {
   engineering.customDocs.push(doc);
   changeEngineering('Documento da equipe adicionado · ' + doc.code);
   hidePopovers();
-  engineering.docQuery = ''; engineering.docKind = ''; engineering.docReview = '';
+  engineering.docQuery = ''; engineering.docKinds = []; engineering.docReviews = [];
   renderDocuments();
   openDocument(doc.id);
   message('Documento adicionado ao catálogo e às revisões selecionadas.');
@@ -408,7 +413,7 @@ function setEngineeringProfile(value) {
   if (!['NASA', 'ECSS', 'CUSTOM'].includes(value)) { return; }
   engineering.profile = value;
   if (typeof lifecycle !== 'undefined') { lifecycle.selectedId = ''; lifecycle.selectedProfile = value; }
-  engineering.docReview = ''; engineering.expandedReview = '';
+  engineering.docReviews = []; engineering.expandedReview = '';
   scheduleList();
   changeEngineering('Referência das entregas alterada para ' + value);
   closePanel(true);
@@ -479,8 +484,9 @@ function handleEngineeringClick(event) {
   else if (action === 'verification-edit') { verificationForm(id); }
   else if (action === 'verification-cancel') { if (verificationDraft?.id) { openVerification(verificationDraft.id); } else { closePanel(true); } }
   else if (action === 'document-detail') { openDocument(id); }
-  else if (action === 'document-kind') { engineering.docKind = button.dataset.kind || ''; renderDocumentRows(); }
-  else if (action === 'clear-document-filters') { engineering.docKind = ''; engineering.docQuery = ''; engineering.docReview = ''; engineering.docFlow = ''; renderDocuments(); el('documents-search').focus(); }
+  else if (action === 'document-kind') { if (button.dataset.kind) { toggleDocumentFilter('docKinds',button.dataset.kind); } else { engineering.docKinds = []; } renderDocumentRows(); }
+  else if (action === 'clear-document-reviews') { engineering.docReviews = []; el('documents-review').querySelectorAll('input').forEach(input => { input.checked = false; }); renderDocumentRows(); }
+  else if (action === 'clear-document-filters') { engineering.docKinds = []; engineering.docQuery = ''; engineering.docReviews = []; engineering.docFlow = ''; renderDocuments(); el('documents-search').focus(); }
   else if (action === 'document-pdf') { const doc = currentDocument(id); if (doc) { downloadBlob(buildEngineeringPDF(doc), doc.code + '.pdf'); message('PDF gerado com a versão atual do projeto.'); } }
   else if (action === 'document-docx') { const doc = currentDocument(id); if (doc) { downloadBlob(buildEngineeringDocx(doc), doc.code + '.docx'); message('Word editável gerado com a versão atual do projeto.'); } }
   else if (action === 'company-document-form') { companyDocumentForm(); }
@@ -494,7 +500,7 @@ function handleEngineeringClick(event) {
   else if (action === 'expand-review') { engineering.expandedReview = engineering.expandedReview === id ? '' : id; preserveScheduleRender(); }
   else if (action === 'generate-schedule') { generateSchedule(); }
   else if (action === 'schedule-document') { openDocument('CRN'); }
-  else if (action === 'documents-for-review') { engineering.docReview = id; engineering.docKind = ''; engineering.docQuery = ''; engineering.docFlow = ''; showModule('documents'); }
+  else if (action === 'documents-for-review') { engineering.docReviews = [id]; engineering.docKinds = []; engineering.docQuery = ''; engineering.docFlow = ''; showModule('documents'); }
 }
 function handleEngineeringChange(event) {
   const input = event.target;
@@ -502,8 +508,7 @@ function handleEngineeringChange(event) {
   if (input.matches('[data-engine-profile]')) { setEngineeringProfile(input.value); }
   else if (input.id === 'verification-method') { engineering.verMethod = input.value; renderVerificationRows(); }
   else if (input.id === 'verification-status') { engineering.verStatus = input.value; renderVerificationRows(); }
-  else if (input.id === 'documents-review') { engineering.docReview = input.value; renderDocumentRows(); }
-  else if (input.id === 'documents-kind') { engineering.docKind = input.value; renderDocumentRows(); }
+  else if (input.matches('[data-document-review]')) { toggleDocumentFilter('docReviews',input.dataset.documentReview); renderDocumentRows(); }
   else if (input.id === 'documents-flow') { engineering.docFlow = input.value; renderDocumentRows(); }
   else if (input.matches('[data-review-toggle]')) {
     const review = scheduleList().find(item => item.id === input.dataset.reviewToggle);
@@ -527,6 +532,8 @@ function initialiseEngineering() {
   window.removeEventListener('resize', originalFitTable);
   if (!methodOptions.includes('Revisão de projeto')) { methodOptions.push('Revisão de projeto'); }
   document.addEventListener('click', handleEngineeringClick, true);
+  document.addEventListener('click', event => { const filter = el('documents-review'); if (filter?.open && !filter.contains(event.target)) { filter.open = false; } });
+  document.addEventListener('keydown', event => { const filter = el('documents-review'); if (event.key === 'Escape' && filter?.open) { event.preventDefault(); event.stopImmediatePropagation(); filter.open = false; filter.querySelector('summary').focus(); } },true);
   document.addEventListener('change', handleEngineeringChange);
   document.addEventListener('input', event => { if (event.target.id === 'verification-search') { engineering.verQuery = event.target.value; renderVerificationRows(); } if (event.target.id === 'documents-search') { engineering.docQuery = event.target.value; renderDocumentRows(); } });
   document.addEventListener('submit', event => { if (event.target.id === 'eng-new-requirement') { saveNewRequirement(event); } else if (event.target.id === 'verification-form') { saveVerification(event); } else if (event.target.id === 'link-verifications-form') { saveLinks(event); } else if (event.target.id === 'company-document-form') { saveCompanyDocument(event); } });

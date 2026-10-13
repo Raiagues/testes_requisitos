@@ -122,6 +122,19 @@ body.workspace-mode .workspace { display:grid; grid-template-columns:192px minma
 .document-chips button span { min-width:17px; font-size:10px; text-align:center; border-radius:10px; background:var(--soft); padding:1px 4px; }
 .document-chips button[aria-pressed=true] { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
 .document-chips button[aria-pressed=true] span { background:var(--paper); }
+.document-review-filter { position:relative; flex:0 0 auto; font-size:12px; }
+.document-review-filter summary { display:flex; align-items:center; justify-content:space-between; gap:14px; min-width:145px; min-height:34px; padding:0 10px; cursor:pointer; border:1px solid var(--line); border-radius:4px; background:var(--paper); list-style:none; }
+.document-review-filter summary::-webkit-details-marker { display:none; }
+.document-review-filter summary svg { width:13px; height:13px; transform:rotate(90deg); }
+.document-review-options { position:absolute; z-index:20; top:calc(100% + 6px); right:0; width:250px; max-width:calc(100vw - 44px); padding:14px; background:var(--paper); border:1px solid var(--line); border-radius:6px; box-shadow:0 10px 26px #00000012; }
+.document-filter-caption { display:flex; align-items:center; justify-content:space-between; color:var(--muted); padding-bottom:8px; }
+.document-review-options fieldset { border:0; margin:0; padding:0; max-height:280px; overflow:auto; }
+.document-review-options legend { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+.document-review-options label { display:flex; align-items:center; gap:9px; padding:8px 4px; cursor:pointer; }
+.document-review-options label:hover { background:var(--soft); }
+.document-review-options input { accent-color:var(--accent); width:15px; height:15px; }
+.document-review-options label span { display:flex; align-items:center; gap:12px; }
+.document-review-options small { color:var(--muted); font-size:10px; }
 .document-category-note { margin-top:10px; color:var(--muted); font-size:11px; line-height:1.6; flex-shrink:0; }
 .document-category-note summary { cursor:pointer; width:fit-content; }
 .document-category-note p { max-width:680px; margin-top:8px; }
