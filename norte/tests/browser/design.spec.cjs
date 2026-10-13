@@ -19,9 +19,9 @@ test('preços abertos antes do bootstrap carregam sem exigir nova seleção',asy
   await page.route('**/api/quote',route => route.fulfill({json:{quote,available:false}}));
   try { await page.goto('/'); await page.evaluate(()=>goConfigure()); await page.getByText('Para meu projeto',{exact:true}).click(); await expect(page.locator('#price-summary')).toContainText('Conferindo a configuração'); release(); await expect(page.locator('.quote-total')).toContainText('890,00'); await expect(page.locator('#continue-order')).toBeDisabled(); } finally { release(); }
 });
-test('navegação à direita e nome editável no exemplo, sem gravar dados no navegador',async ({page}) => {
+test('navegação à esquerda e nome editável no exemplo, sem gravar dados no navegador',async ({page}) => {
   await page.setViewportSize({width:1440,height:900}); await page.goto('/'); await page.getByRole('button',{name:'Explorar a plataforma',exact:true}).click();
-  const nav = await page.locator('.eng-navigation').boundingBox(); const main = await page.locator('#req-module').boundingBox(); expect(nav.x).toBeGreaterThan(main.x + main.width);
+  const nav = await page.locator('.eng-navigation').boundingBox(); const main = await page.locator('#req-module').boundingBox(); expect(nav.x + nav.width).toBeLessThan(main.x);
   await page.getByRole('button',{name:'Editar nome do projeto'}).click(); await page.locator('[data-platform-form="demo-name"] input').fill('Missão Horizonte'); await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
   await expect(page.locator('.eng-project strong')).toHaveText('Missão Horizonte'); await page.screenshot({path:'test-results/design-workspace.png',fullPage:true});
   await page.locator('.eng-nav [data-module="schedule"]').click(); await expect(page.locator('.life-title')).toContainText('Missão Horizonte');
@@ -36,9 +36,24 @@ test('revisão abre na lateral; categorias, busca e retorno à referência prese
   await page.getByRole('searchbox',{name:'Buscar documentos nesta revisão'}).fill('Registro'); await expect(detail.locator('[data-life-kind]:visible')).toHaveCount(1);
   await page.getByRole('button',{name:'Critérios da revisão',exact:true}).click(); await expect(page.locator('.source-context')).toHaveCount(1); await expect(page.locator('.source-paper,.source-quote')).toHaveCount(0); await page.screenshot({path:'test-results/design-reference.png'});
   await page.getByRole('button',{name:'Voltar',exact:true}).click(); await expect(detail.locator('[data-life-kind]:visible')).toHaveCount(1); await expect(page.locator('#life-document-search')).toHaveValue('Registro');
+  await page.setViewportSize({width:1024,height:768}); await expect(page.locator('#life-document-search')).toHaveValue('Registro'); await expect(detail.locator('[data-life-kind]:visible')).toHaveCount(1); await page.setViewportSize({width:1440,height:900});
   await page.locator('#life-document-search').fill(''); await detail.locator('[data-kind=""]').click(); await expect(detail.locator('[data-life-kind]:visible')).toHaveCount(4);
   expect((await detail.locator('.eng-delivery-item').first().boundingBox()).height).toBeLessThan(90);
   await page.getByRole('button',{name:'Fechar detalhes da revisão'}).click(); await expect(page.locator('#side-panel')).toBeHidden(); await expect(page.locator('.life-marker[data-id="TRR"][data-profile="NASA"]')).toBeFocused();
+});
+test('painel redimensiona o espaço sem perder edição, foco ou o marco selecionado',async ({page}) => {
+  await page.setViewportSize({width:1440,height:900}); await page.goto('/'); await page.evaluate(() => showModule('requirements'));
+  const initial = await page.locator('#main-content').boundingBox();
+  await page.locator('#rows tr').first().click(); await page.getByRole('button',{name:'Editar requisito',exact:true}).click(); const input = page.locator('[data-edit=text]'); await input.fill('O sistema deve preservar esta edição durante o redimensionamento.');
+  await page.setViewportSize({width:1024,height:768}); await expect(input).toHaveValue('O sistema deve preservar esta edição durante o redimensionamento.');
+  await page.setViewportSize({width:1440,height:900}); await page.getByRole('button',{name:'Salvar e analisar',exact:true}).click(); await page.keyboard.press('Escape');
+  await expect(page.locator('#rows tr').first()).toContainText('preservar esta edição'); await expect(page.locator('#rows tr').first()).toBeFocused();
+  await expect.poll(async () => Math.round((await page.locator('#main-content').boundingBox()).width)).toBe(Math.round(initial.width));
+  await page.locator('.eng-nav [data-module=schedule]').click(); await page.locator('.life-marker[data-id=PLAR][data-profile=NASA]').click();
+  await expect.poll(() => page.locator('#shell').evaluate(node => node.getAnimations().some(animation => animation.playState === 'running'))).toBe(false);
+  await expect.poll(() => page.evaluate(() => { const plot = document.querySelector('.life-plot').getBoundingClientRect(); const marker = document.querySelector('.life-marker.selected').getBoundingClientRect(); return marker.left >= plot.left && marker.right <= plot.right; })).toBe(true);
+  const bounds = await page.evaluate(() => ({main:document.querySelector('#main-content').getBoundingClientRect().toJSON(),panel:document.querySelector('#side-panel').getBoundingClientRect().toJSON()})); expect(bounds.main.right).toBeLessThanOrEqual(bounds.panel.x + 1); expect(bounds.main.width).toBeLessThan(initial.width);
+  await page.locator('.eng-nav [data-module=documents]').click(); await expect(page.locator('#side-panel')).toBeHidden(); await expect(page.locator('#documents-module')).toBeVisible();
 });
 test('documentos combinam filtros de revisão, categoria, entrada e busca e permitem limpar',async ({page}) => {
   await page.goto('/'); await page.evaluate(() => showModule('documents')); const total = await page.locator('#documents-rows tr').count();

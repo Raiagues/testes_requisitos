@@ -84,10 +84,12 @@ function setPanel(kind, content, focus = true) {
   panel.hidden = false;
   panel.innerHTML = content;
   panel.setAttribute('aria-labelledby', 'panel-title');
-  el('shell').classList.remove('has-panel');
-  if (wasOpen) { panel.style.animation = 'none'; } else { panel.style.animation = ''; }
+  el('shell').classList.add('panel-docked');
   renderTable();
-  if (focus) { el('panel-title')?.focus({preventScroll: true}); }
+  if (focus) {
+    el('panel-title')?.focus({preventScroll: true});
+    if (matchMedia('(max-width:800px)').matches) { requestAnimationFrame(() => { if (!panel.hidden) { const shell = el('shell'); shell.scrollTo({top:shell.scrollTop + panel.getBoundingClientRect().top - shell.getBoundingClientRect().top,behavior:matchMedia('(prefers-reduced-motion:reduce)').matches ? 'instant' : 'smooth'}); } }); }
+  }
 }
 function closePanel(force = false) {
   if (state.panel === 'edit' && draft && draftChanged() && !force) {
@@ -101,10 +103,11 @@ function closePanel(force = false) {
   state.panel = '';
   el('side-panel').hidden = true;
   el('side-panel').innerHTML = '';
-  el('shell').classList.remove('has-panel');
+  el('shell').classList.remove('panel-docked');
   renderTable();
   if (wasReview) { lifecycle.selectedId = ''; lifecycle.selectedProfile = ''; if (engineering.module === 'schedule') { renderSchedule(); } }
   if (reviewFocus) { lastFocus = [...document.querySelectorAll('.life-marker')].find(node => node.dataset.id === reviewFocus.id && node.dataset.profile === reviewFocus.profile); }
+  else if (lastFocus?.dataset.action === 'detail') { lastFocus = [...document.querySelectorAll('.requirement-row')].find(node => node.dataset.id === lastFocus.dataset.id); }
   if (lastFocus && document.contains(lastFocus)) { lastFocus.focus({preventScroll: true}); }
 }
 function openDetail(id) {

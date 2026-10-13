@@ -1,13 +1,16 @@
 const {test,expect} = require('@playwright/test');
 const fs = require('node:fs');
 const path = require('node:path');
-for (const [width,height] of [[1366,768],[1440,900],[1920,1080],[390,844]]) {
-  test(`interface, detalhes e cartão de revisão ${width}x${height}`,async ({page}) => {
+for (const [width,height] of [[1024,768],[1366,768],[1440,900],[1920,1080],[390,844]]) {
+  test(`interface e painéis integrados sem sobreposição ${width}x${height}`,async ({page}) => {
     await page.setViewportSize({width,height}); await page.emulateMedia({reducedMotion:'reduce'}); const errors = []; page.on('pageerror',error => errors.push(error.message));
     await page.goto('/'); await expect(page.locator('.brand')).toBeVisible();
     await page.evaluate(() => showModule('requirements')); await expect(page.locator('#rows tr')).toHaveCount(6);
-    const before = await page.locator('.requirements-table').boundingBox();
-    await page.locator('#rows tr').first().click(); const after = await page.locator('.requirements-table').boundingBox(); expect(after.width).toBe(before.width);
+    const before = await page.locator('#main-content').boundingBox();
+    await page.locator('#rows tr').first().click(); const after = await page.locator('#main-content').boundingBox(); const panel = await page.locator('#side-panel').boundingBox();
+    if (width > 800) { expect(after.width).toBeLessThan(before.width); expect(after.x + after.width).toBeLessThanOrEqual(panel.x + 1); }
+    else { expect(after.y + after.height).toBeLessThanOrEqual(panel.y + 1); }
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
     await expect(page.locator('#side-panel')).toBeVisible(); await page.keyboard.press('Escape');
     await page.evaluate(() => showModule('schedule')); await page.evaluate(() => lifeSelect('NASA','MDR-SDR'));
     await expect(page.locator('#life-review-detail')).toContainText('DOCUMENTOS DE ENTRADA'); await expect(page.locator('#life-review-detail')).not.toContainText('norma*');

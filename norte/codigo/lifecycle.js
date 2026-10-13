@@ -339,4 +339,24 @@ openDocument = function(id) {
 if (location.hash === '#cronograma' || document.body.dataset.startModule === 'schedule') { showModule('schedule'); }
 
 let lifeResizeFrame = 0;
-window.addEventListener('resize', () => { cancelAnimationFrame(lifeResizeFrame); lifeResizeFrame = requestAnimationFrame(() => { if (engineering.module === 'schedule') { preserveScheduleRender(); } }); });
+function resizeLifeChart() {
+  const plot = el('schedule-module').querySelector('.life-plot');
+  if (!plot || engineering.module !== 'schedule' || state.view !== 'workspace') { return; }
+  const model = lifeGraphModel();
+  const svg = plot.querySelector('svg');
+  if (svg?.viewBox.baseVal.width !== model.width || svg.viewBox.baseVal.height !== model.height) {
+    const focused = document.activeElement?.closest('.life-marker');
+    const focusKey = focused && plot.contains(focused) ? {id:focused.dataset.id,profile:focused.dataset.profile} : null;
+    const scroll = plot.scrollLeft;
+    plot.innerHTML = lifeSVG(); plot.scrollLeft = scroll;
+    if (focusKey) { [...plot.querySelectorAll('.life-marker')].find(node => node.dataset.id === focusKey.id && node.dataset.profile === focusKey.profile)?.focus({preventScroll:true}); }
+  }
+  if (state.panel === 'lifecycle-review') {
+    const selected = plot.querySelector('.life-marker.selected');
+    if (selected) { const marker = selected.getBoundingClientRect(); const frame = plot.getBoundingClientRect(); if (marker.right > frame.right - 12) { plot.scrollLeft += marker.right - frame.right + 12; } else if (marker.left < frame.left + 12) { plot.scrollLeft += marker.left - frame.left - 12; } }
+  }
+}
+function queueLifeResize() { cancelAnimationFrame(lifeResizeFrame); lifeResizeFrame = requestAnimationFrame(resizeLifeChart); }
+const lifeSizeObserver = new ResizeObserver(queueLifeResize);
+lifeSizeObserver.observe(el('schedule-module'));
+window.addEventListener('resize',queueLifeResize);

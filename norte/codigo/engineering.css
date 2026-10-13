@@ -1,4 +1,4 @@
-/* A área de trabalho não muda de largura quando o painel abre. */
+/* Os módulos compartilham a área de trabalho com o painel de detalhes. */
 body.workspace-mode .site-header{height:70px;padding:0 30px}
 body.workspace-mode .application{grid-template-rows:70px minmax(0,1fr) 32px}
 body.workspace-mode .workspace{padding:0 26px 16px;overflow:hidden;min-width:850px}
@@ -61,7 +61,7 @@ body.workspace-mode #main-content{flex:1;width:100%;min-width:0}
 .eng-method-stack{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
 .eng-count-link{background:transparent;border:0;padding:3px 0;font-size:11px;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
 .eng-table-end{min-height:37px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:11px;color:var(--muted);padding:0 15px;border:1px solid var(--line);border-top:0;background:var(--paper);border-radius:0 0 7px 7px;flex-shrink:0}
-body .side-panel{position:fixed!important;top:70px;right:0;bottom:32px;width:min(545px,calc(100vw - 34px));height:auto;z-index:65;display:flex;flex-direction:column;background:var(--paper);border-left:1px solid var(--line);box-shadow:-16px 0 42px #21171014;animation:eng-panel-in .19s ease-out;min-width:0;flex:none}
+body .side-panel{position:relative;display:flex;flex-direction:column;background:var(--paper);border-left:1px solid var(--line);min-width:0;min-height:0;flex:none}
 body .side-panel[hidden]{display:none!important}
 .side-panel .panel-heading{flex-shrink:0;padding:18px 23px;min-height:76px;background:var(--paper)}
 .side-panel .panel-heading h2{font-size:19px;font-weight:550;letter-spacing:-.25px}
