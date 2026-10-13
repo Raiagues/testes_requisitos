@@ -3,7 +3,7 @@ const {AppError} = require('./errors.cjs');
 const FAQ = Object.freeze({navigation:'Use Requisitos, Verificação, Documentos e Cronograma dentro do projeto. Meus projetos permite criar, abrir e salvar seus projetos.',plans:'Essencial inclui edição manual, checagens básicas e três entregas básicas. O teste avançado dura 14 dias após ativação explícita, sem cartão. Consulte a configuração para os limites e valores vigentes.',documents:'Documentos gera rascunhos com os dados salvos. Ausências permanecem como pendências; a Norte não aprova documentos nem declara testes executados.',contracting:'Solicitar contratação registra uma intenção. A equipe confirma escopo e disponibilidade. Nenhum pagamento é processado e revisão humana é contratada separadamente.',privacy:'Não envie dados pessoais ou técnicos no chat. A ajuda usa somente informações públicas do produto. Projetos restritos não podem ser enviados para análise externa.'});
 const helpInput = z.strictObject({topic:z.enum(['navigation','plans','documents','contracting','privacy'])});
 const helpOutput = z.strictObject({topic:z.enum(['navigation','plans','documents','contracting','privacy'])});
-const unsafeOutput = /<\/?[a-z][^>]*>|https?:\/\/|data:|javascript:|\]\(|(?:api[_ -]?key|service_role|authorization)\s*[:=]|\b(?:sk|AIza)[-_A-Za-z0-9]{16,}/i;
+const unsafeOutput = /<\/?[a-z][^>]*>|https?:\/\/|data:|javascript:|\]\(|(?:api[_ -]?key|service_role|authorization)\s*[:=]|\b(?:sk|AIza|AQ\.|sb_secret_|sbp_|rnd_)[-_A-Za-z0-9]{16,}/i;
 function suspicious(value) {
   const copy = value.normalize('NFKC').toLowerCase();
   return /(?:ignore|ignore todas|desconsidere).{0,35}(?:previous|instruções|regras)|(?:reveal|divulgue|exponha).{0,30}(?:secret|segredo|chave)|(?:execute|executar).{0,25}(?:shell|sql|terminal)|(?:system|assistant)\s*:\s*(?:ignore|execute)/i.test(copy);
@@ -16,15 +16,17 @@ async function generateJson({key,model,instruction,data,schema,fetcher = fetch})
   if (!response.ok) { throw new AppError('ai_unavailable',503); }
   const reader = response.body?.getReader();
   let raw = '';
-  if (reader) { let total = 0; for (;;) { const part = await reader.read(); if (part.done) { break; } total += part.value.byteLength; if (total > 100000) { await reader.cancel(); throw new AppError('ai_invalid_response',502); } raw += new TextDecoder().decode(part.value,{stream:true}); } } else { raw = await response.text(); }
+  if (reader) { let total = 0; const decoder = new TextDecoder(); for (;;) { const part = await reader.read(); if (part.done) { break; } total += part.value.byteLength; if (total > 100000) { await reader.cancel(); throw new AppError('ai_invalid_response',502); } raw += decoder.decode(part.value,{stream:true}); } raw += decoder.decode(); } else { raw = await response.text(); }
   if (raw.length > 100000) { throw new AppError('ai_invalid_response',502); }
   let result;
   try { result = JSON.parse(raw); } catch { throw new AppError('ai_invalid_response',502); }
   const candidates = result.candidates;
   if (!Array.isArray(candidates) || candidates.length !== 1 || candidates[0].finishReason !== 'STOP') { throw new AppError('ai_invalid_response',502); }
   const parts = candidates[0].content?.parts;
-  if (!Array.isArray(parts) || parts.some(part => Object.keys(part).some(key => key !== 'text' && key !== 'thought')) || parts.some(part => part.thought)) { throw new AppError('ai_invalid_response',502); }
-  try { return JSON.parse(parts.map(part => part.text || '').join('')); } catch { throw new AppError('ai_invalid_response',502); }
+  const transportPart = z.strictObject({text:z.string().max(100000),thought:z.literal(false).optional(),thoughtSignature:z.string().min(1).max(8192).regex(/^[A-Za-z0-9+/_=-]+$/).optional()});
+  if (!z.array(transportPart).min(1).max(10).safeParse(parts).success) { throw new AppError('ai_invalid_response',502); }
+  // Assinatura opaca do provedor é descartada; somente o JSON de texto chega ao schema do produto.
+  try { return JSON.parse(parts.map(part => part.text).join('')); } catch { throw new AppError('ai_invalid_response',502); }
 }
 async function help(input,config,fetcher) {
   const {topic} = helpInput.parse(input);

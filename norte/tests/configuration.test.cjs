@@ -5,7 +5,11 @@ const tls = require('node:tls');
 const {readConfig,configured} = require('../server/config.cjs');
 const {createGateway,encrypt,decrypt} = require('../server/supabase.cjs');
 const {databaseOptions,databaseError} = require('../scripts/database-connection.cjs');
-const {TARGET,validateService,authSettings,gmailSettings} = require('../scripts/setup-cloud.cjs');
+const {TARGET,validateService,authSettings,gmailSettings,publicHelpSettings} = require('../scripts/setup-cloud.cjs');
+// Credenciais descartáveis geradas apenas em memória; nenhum teste conecta estes destinos.
+function fixtureDatabase(host, password = crypto.randomUUID(), suffix = '/postgres') {
+  const url = new URL('postgresql://' + host + suffix); url.username = 'fixture'; url.password = password; return url.href;
+}
 test('Render fornece a origem; uma origem explícita prevalece sem aceitar HTTP, caminho ou credenciais',() => {
   const env = {NODE_ENV:'production',RENDER:'true',RENDER_EXTERNAL_URL:'https://fixture.onrender.com'};
   assert.equal(readConfig(env).siteUrl,env.RENDER_EXTERNAL_URL);
@@ -22,24 +26,25 @@ test('chave gerada pelo Render mantém AES-256 e compatibilidade com sessões em
   assert.equal(configured(readConfig({NODE_ENV:'production',RENDER:'true',RENDER_EXTERNAL_URL:'https://fixture.onrender.com'})),false);
 });
 test('PostgreSQL Supabase usa CA oficial com verificação de hostname e de cadeia',() => {
-  const config = databaseOptions('postgresql://postgres.abcdefghijklmnopqrst:fake@aws-0-region.pooler.supabase.com:5432/postgres',{});
+  const config = databaseOptions(fixtureDatabase('aws-0-region.pooler.supabase.com:5432'),{});
   assert.equal(config.ssl.rejectUnauthorized,true);
   assert.equal(config.ssl.checkServerIdentity,undefined);
   const certificate = new crypto.X509Certificate(config.ssl.ca.at(-1));
   assert.equal(certificate.fingerprint256.replaceAll(':',''),'807025AD50D4ED219D2C9C7D299C004F824EB00CF7F65AFEF607D07B72E6CAFA');
   assert.ok(Date.parse(certificate.validTo) > Date.now());
   assert.ok(tls.checkServerIdentity('attacker.example',{subject:{CN:'*.pooler.supabase.com'}}));
-  assert.equal(databaseOptions('postgresql://user:fake@database.example/postgres',{}).ssl.ca,undefined);
+  assert.equal(databaseOptions(fixtureDatabase('database.example'),{}).ssl.ca,undefined);
 });
 test('parâmetros da URL não podem trocar destino ou desativar verificação TLS',() => {
-  const config = databaseOptions('postgresql://user:p%40s@database.example/db?sslmode=require&ssl=false&host=attacker.example&uselibpqcompat=true',{});
-  assert.equal(config.host,'database.example'); assert.equal(config.password,'p@s'); assert.equal(config.ssl.rejectUnauthorized,true);
-  for (const mode of ['disable','no-verify','prefer','allow','verify-ca']) { assert.throws(() => databaseOptions('postgresql://user:fake@database.example/db?sslmode=' + mode,{})); }
-  assert.throws(() => databaseOptions('postgresql://user:fake@database.example/db',{MIGRATION_SSL:'disable-local-only'}));
-  assert.equal(databaseOptions('postgresql://user:fake@127.0.0.1/db',{MIGRATION_SSL:'disable-local-only'}).ssl,false);
+  const password = '@' + crypto.randomUUID();
+  const config = databaseOptions(fixtureDatabase('database.example',password,'/db?sslmode=require&ssl=false&host=attacker.example&uselibpqcompat=true'),{});
+  assert.equal(config.host,'database.example'); assert.equal(config.password,password); assert.equal(config.ssl.rejectUnauthorized,true);
+  for (const mode of ['disable','no-verify','prefer','allow','verify-ca']) { assert.throws(() => databaseOptions(fixtureDatabase('database.example',undefined,'/db?sslmode=' + mode),{})); }
+  assert.throws(() => databaseOptions(fixtureDatabase('database.example'),{MIGRATION_SSL:'disable-local-only'}));
+  assert.equal(databaseOptions(fixtureDatabase('127.0.0.1'),{MIGRATION_SSL:'disable-local-only'}).ssl,false);
 });
 test('diagnóstico da migração identifica o erro sem imprimir senha, conexão ou mensagem do provedor',() => {
-  const result = databaseError({code:'28P01',message:'password secret-value postgres://user:fake@host/db',detail:'sb_secret_fixture'});
+  const result = databaseError({code:'28P01',message:'password secret-value ' + fixtureDatabase('host.invalid'),detail:'sb_secret_fixture'});
   assert.match(result,/28P01/); assert.match(result,/senha do banco/); assert.doesNotMatch(result,/secret-value|postgres:\/\/|sb_secret/);
   assert.doesNotMatch(databaseError({code:'bad\nsecret-value',message:'secret-value'}),/secret-value/);
 });
@@ -52,11 +57,14 @@ test('automação de painéis recusa outro Norte, outro repositório e plano pag
   assert.match(auth.mailer_templates_confirmation_content,/TokenHash/); assert.doesNotMatch(auth.uri_allow_list,/\*/);
 });
 test('SMTP gratuito exige senha de app; configuração parcial mantém confirmação e aviso de e-mail indisponível',() => {
+  const password = Array.from(crypto.randomBytes(16),value => String.fromCharCode(97 + value % 26)).join('');
+  const grouped = password.match(/.{4}/g).join(' ');
   assert.deepEqual(gmailSettings({}),{});
   assert.throws(() => gmailSettings({AUTH_SMTP_PASSWORD:'short',PRIVACY_CONTACT:'fixture@gmail.com'}));
-  assert.throws(() => gmailSettings({AUTH_SMTP_PASSWORD:'abcd efgh ijkl mnop',PRIVACY_CONTACT:'fixture@example.invalid'}));
-  const settings = gmailSettings({AUTH_SMTP_PASSWORD:'abcd efgh ijkl mnop',PRIVACY_CONTACT:'fixture@gmail.com',SERVICE_OWNER:'Fixture'});
-  assert.equal(settings.smtp_host,'smtp.gmail.com'); assert.equal(settings.smtp_port,587); assert.equal(settings.smtp_pass.length,16);
+  assert.throws(() => gmailSettings({AUTH_SMTP_PASSWORD:grouped,PRIVACY_CONTACT:'fixture@example.invalid'}));
+  const settings = gmailSettings({AUTH_SMTP_PASSWORD:grouped,PRIVACY_CONTACT:'fixture@gmail.com',SERVICE_OWNER:'Fixture'});
+  assert.equal(settings.smtp_pass,password);
+  assert.equal(settings.smtp_host,'smtp.gmail.com'); assert.equal(settings.smtp_port,'587'); assert.equal(settings.smtp_pass.length,16);
   const partial = authSettings('https://fixture.onrender.com',false); assert.equal(partial.mailer_autoconfirm,false); assert.equal(partial.password_min_length,12); assert.equal(partial.mailer_templates_confirmation_content,undefined);
   assert.equal(readConfig({AUTH_EMAIL_READY:'true'}).authEmailReady,true); assert.equal(readConfig({}).authEmailReady,false);
 });
@@ -73,4 +81,10 @@ test('sessão revogada retornada pelo PostgreSQL como registro de campos nulos e
   const gateway = createGateway(readConfig({SUPABASE_URL:'https://fixture.supabase.co',SUPABASE_PUBLISHABLE_KEY:'fixture',SUPABASE_SECRET_KEY:'fixture'}));
   gateway.service.rpc = async () => ({data:{id:null,user_id:null,encrypted_tokens:null,expires_at:null},error:null});
   await assert.rejects(gateway.resolveSession('a'.repeat(43)),error => error.status === 401 && error.code === 'session_expired');
+});
+test('configuração de ajuda pública exige liberação explícita e mantém modelo e teto autorizados',() => {
+  assert.deepEqual(publicHelpSettings({helpApproved:false,geminiKey:'fixture'}),{});
+  assert.throws(() => publicHelpSettings({helpApproved:true,geminiKey:'fixture',geminiModel:'another-model'}));
+  const approved = publicHelpSettings({helpApproved:true,geminiKey:'fixture',geminiModel:'gemini-3.1-flash-lite'});
+  assert.equal(approved.GEMINI_HELP_APPROVED,'true'); assert.equal(approved.AI_DAILY_CALL_LIMIT,'20'); assert.equal(approved.AI_MAX_CONCURRENCY,'1'); assert.equal(approved.REQUIREMENTS_AI_APPROVED,undefined);
 });

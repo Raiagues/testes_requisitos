@@ -13,3 +13,15 @@ dist/
 *.log
 .DS_Store
 /norte/documentos/
+# Relatórios e instruções operacionais permanecem apenas no computador.
+/norte/CONFIGURACAO_FINAL.md
+/norte/DEPLOY_RENDER.md
+/norte/EXECUCAO.md
+/norte/FONTES_E_LICENCAS.md
+/norte/SECURITY.md
+/norte/TESTES.md
+/norte/docs/
+/COMECE_AQUI.txt
+/PROMPT_CODEX.txt
+/PROMPT_SEGURANCA_NORTE.txt
+/REFERENCIA_A_CORRIGIR.png

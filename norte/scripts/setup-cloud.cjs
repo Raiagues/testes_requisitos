@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const path = require('node:path');
 const {readConfig,configured} = require('../server/config.cjs');
+const {verifyGmail} = require('./check-smtp.cjs');
 const TARGET = Object.freeze({project:'pdkceggaucuanisybbak',service:'srv-db72glavcj2c73e9sieg',name:'testes-requisitos',repo:'https://github.com/Raiagues/testes_requisitos'});
 function validateService(service) {
   if (service.id !== TARGET.service || service.name !== TARGET.name || service.repo?.replace(/\.git$/,'') !== TARGET.repo || service.branch !== 'main' || service.rootDir !== 'norte' || service.type !== 'web_service' || service.serviceDetails?.env !== 'docker' || service.serviceDetails?.plan !== 'free') { throw new Error('Serviço divergente: nenhuma alteração autorizada fora de testes-requisitos no plano Free.'); }
@@ -17,7 +18,12 @@ function gmailSettings(env) {
   if (!env.AUTH_SMTP_PASSWORD) { return {}; }
   const password = env.AUTH_SMTP_PASSWORD.replace(/\s/g,'');
   if (!/^[a-z]{16}$/i.test(password) || !/^[^\s@]+@gmail\.com$/.test(env.PRIVACY_CONTACT || '')) { throw new Error('Use uma senha de app do Gmail de 16 letras e o endereço Gmail da Norte.'); }
-  return {smtp_host:'smtp.gmail.com',smtp_port:587,smtp_user:env.PRIVACY_CONTACT,smtp_pass:password,smtp_admin_email:env.PRIVACY_CONTACT,smtp_sender_name:env.SERVICE_OWNER};
+  return {smtp_host:'smtp.gmail.com',smtp_port:'587',smtp_user:env.PRIVACY_CONTACT,smtp_pass:password,smtp_admin_email:env.PRIVACY_CONTACT,smtp_sender_name:env.SERVICE_OWNER};
+}
+function publicHelpSettings(config) {
+  if (!config.helpApproved) { return {}; }
+  if (!config.geminiKey || config.geminiModel !== 'gemini-3.1-flash-lite') { throw new Error('Ajuda Gemini exige a chave privada e o modelo com faixa gratuita autorizado nesta implantação.'); }
+  return {GEMINI_API_KEY:config.geminiKey,GEMINI_MODEL:config.geminiModel,GEMINI_HELP_APPROVED:'true',AI_DAILY_CALL_LIMIT:'20',AI_MAX_CONCURRENCY:'1'};
 }
 function savePrivate(values) {
   const filename = path.join(__dirname,'..','.env'); let contents = fs.readFileSync(filename,'utf8');
@@ -39,7 +45,7 @@ async function main(mode = process.argv[2] || 'plan', env = process.env) {
   if (project.id !== TARGET.project) { throw new Error('Projeto Supabase divergente.'); }
   const config = readConfig({...env,NODE_ENV:'production',SITE_URL:siteUrl});
   if (!configured(config) || !config.serviceOwner || !config.privacyContact) { throw new Error('Configuração local incompleta.'); }
-  const values = {NODE_ENV:'production',SITE_URL:siteUrl,SESSION_ENCRYPTION_KEY:config.sessionKey,SUPABASE_URL:config.supabaseUrl,SUPABASE_PUBLISHABLE_KEY:config.publishableKey,SUPABASE_SECRET_KEY:config.secretKey,SERVICE_OWNER:config.serviceOwner,PRIVACY_CONTACT:config.privacyContact,REQUIREMENTS_AI_PROVIDER:'none',GEMINI_HELP_APPROVED:'false',REQUIREMENTS_AI_APPROVED:'false'};
+  const values = {NODE_ENV:'production',SITE_URL:siteUrl,SESSION_ENCRYPTION_KEY:config.sessionKey,SUPABASE_URL:config.supabaseUrl,SUPABASE_PUBLISHABLE_KEY:config.publishableKey,SUPABASE_SECRET_KEY:config.secretKey,SERVICE_OWNER:config.serviceOwner,PRIVACY_CONTACT:config.privacyContact,REQUIREMENTS_AI_PROVIDER:'none',GEMINI_HELP_APPROVED:'false',REQUIREMENTS_AI_APPROVED:'false',...publicHelpSettings(config)};
   console.log(JSON.stringify({mode,service:service.name,siteUrl,project:project.id,plan:'free',variableNames:Object.keys(values)}));
   if (mode === 'plan') { return; }
   if (mode === 'rotate-key') {
@@ -55,11 +61,17 @@ async function main(mode = process.argv[2] || 'plan', env = process.env) {
   if (mode === 'apply') {
     const current = await api('supabase',`/projects/${TARGET.project}/config/auth`);
     const smtp = gmailSettings(env); const emailReady = Boolean(smtp.smtp_host || current.smtp_host);
+    if (smtp.smtp_host) { await verifyGmail(smtp); console.log('SMTP: autenticação TLS confirmada sem enviar mensagem.'); }
     const desired = {...authSettings(siteUrl,false),...smtp}; desired.password_min_length = Math.max(current.password_min_length || 12,12);
     await api('supabase',`/projects/${TARGET.project}/config/auth`,'PATCH',desired);
     if (emailReady) { await api('supabase',`/projects/${TARGET.project}/config/auth`,'PATCH',{...authSettings(siteUrl),password_min_length:desired.password_min_length}); }
     values.AUTH_EMAIL_READY = String(emailReady);
     for (const [key,value] of Object.entries(values)) { await api('render',`/services/${TARGET.service}/env-vars/${key}`,'PUT',{value}); }
+    if (config.helpApproved) {
+      const {createGateway} = require('../server/supabase.cjs'); const {check} = require('../server/errors.cjs'); const gateway = createGateway(config);
+      check(await gateway.service.from('norte_controls').update({ai_enabled:true}).eq('id',true));
+      await gateway.audit(null,null,'public_help_configured','enabled',require('node:crypto').randomUUID());
+    }
     savePrivate({SITE_URL:siteUrl,AUTH_EMAIL_READY:String(emailReady)});
     console.log(JSON.stringify({configured:true,confirmationRequired:true,customSmtp:emailReady,emailDeliveryTested:false,managementTokensSentToRender:false})); return;
   }
@@ -81,4 +93,4 @@ async function main(mode = process.argv[2] || 'plan', env = process.env) {
   savePrivate({PREVIOUS_SUPABASE_SECRET_KEY_ID:''}); console.log('Chave anterior revogada após conferir a aplicação e a chave substituta no Render.');
 }
 if (require.main === module) { main().catch(error => { console.error(error.message); process.exitCode = 1; }); }
-module.exports = {TARGET,validateService,authSettings,gmailSettings};
+module.exports = {TARGET,validateService,authSettings,gmailSettings,publicHelpSettings};

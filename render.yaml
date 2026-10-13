@@ -33,6 +33,14 @@ services:
       - key: REQUIREMENTS_AI_PROVIDER
         value: none
       - key: GEMINI_HELP_APPROVED
-        value: "false"
+        value: "true"
+      - key: GEMINI_MODEL
+        value: gemini-3.1-flash-lite
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AI_DAILY_CALL_LIMIT
+        value: "20"
+      - key: AI_MAX_CONCURRENCY
+        value: "1"
       - key: REQUIREMENTS_AI_APPROVED
         value: "false"
