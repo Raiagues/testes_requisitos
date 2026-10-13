@@ -1,0 +1,107 @@
+/* O diagrama mantém as dimensões da área de trabalho. */
+#schedule-module{--life-nasa:#526d77;--life-ecss:#946346;--life-nasa-soft:#e4ecee;--life-ecss-soft:#efe2d5}
+:root[data-theme=dark] #schedule-module{--life-nasa:#a6c4cf;--life-ecss:#ddb18b;--life-nasa-soft:#2a3b40;--life-ecss-soft:#3d3229}
+#schedule-module .workspace-head{margin-bottom:18px}
+.life-scroll{overflow:auto;min-height:0;flex:1;overscroll-behavior:contain;scrollbar-width:thin;padding-right:2px;scroll-behavior:smooth}
+.life-board{border:1px solid var(--line);border-radius:9px;overflow:hidden;background:var(--paper)}
+.life-toolbar{min-height:62px;display:flex;align-items:center;justify-content:space-between;padding:13px 20px;gap:20px;border-bottom:1px solid var(--line)}
+.life-title{display:flex;align-items:center;gap:12px}
+.life-title strong{font-size:14px;font-weight:600}
+.life-title span{font-size:12px;color:var(--muted)}
+.life-tools{display:flex;align-items:center;gap:19px}
+.life-tools select{height:33px;font-size:13px;border:1px solid var(--line);background:var(--paper);border-radius:5px;padding:0 28px 0 10px;color:var(--ink)}
+.life-toggle{display:flex;gap:8px;align-items:center;font-size:12px;color:var(--muted);cursor:pointer;white-space:nowrap}
+.life-toggle input{accent-color:var(--accent);width:14px;height:14px;margin:0}
+.life-toolbar .eng-profile-label{font-size:12px;gap:8px}
+.life-chart{width:100%;display:block;min-width:860px;height:auto;font-family:Inter,'Segoe UI',Arial,sans-serif}
+.life-plot{overflow-x:auto;scrollbar-width:thin}
+.life-chart .life-phase{fill:var(--soft)}
+.life-chart .life-separator{stroke:var(--line);stroke-width:1;shape-rendering:crispEdges}
+.life-chart .life-grid{stroke:var(--line);stroke-width:1;stroke-dasharray:3 4}
+.life-chart .life-text{fill:var(--ink)}
+.life-chart .life-muted{fill:var(--muted)}
+.life-chart .life-band{fill:var(--accent-soft);opacity:.66}
+.life-chart .life-nasa .life-symbol{stroke:var(--life-nasa);fill:var(--paper);stroke-width:1.7}
+.life-chart .life-ecss .life-symbol{stroke:var(--life-ecss);fill:var(--life-ecss);stroke-width:1.3}
+.life-chart .life-nasa .life-marker-label{fill:var(--life-nasa)}
+.life-chart .life-ecss .life-marker-label{fill:var(--life-ecss)}
+.life-chart .life-marker{cursor:pointer;outline:none}
+.life-chart .life-hit{fill:transparent;stroke:transparent;stroke-width:1}
+.life-chart .life-marker:hover .life-hit,.life-chart .life-marker:focus-visible .life-hit{fill:var(--paper);stroke:var(--line)}
+.life-chart .life-marker.selected .life-hit{fill:var(--paper);stroke:var(--accent);stroke-width:1.4}
+.life-chart .life-marker.reference{opacity:.63}
+.life-chart .life-marker-label{font-size:12px;font-weight:650;letter-spacing:.2px}
+.life-chart .life-guide{stroke:var(--accent);opacity:.38;stroke-dasharray:4 4;stroke-width:1}
+.life-chart .life-guide-label{fill:var(--muted);font-size:10.5px}
+.life-chart .life-stem{stroke:var(--line);stroke-width:1}
+.life-legend{padding:13px 20px;display:flex;align-items:center;justify-content:space-between;gap:18px;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
+.life-legend-items{display:flex;align-items:center;gap:21px}
+.life-symbol-key{display:inline-flex;align-items:center;gap:7px;font-size:12px;color:var(--muted)}
+.life-symbol-key svg{width:15px;height:15px;overflow:visible;flex-shrink:0}
+.life-legend .text-button{font-size:12px;padding:0}
+.life-note{font-size:11.5px;line-height:1.6;color:var(--muted);margin:12px 2px 16px}
+.life-note button{border:0;background:transparent;padding:0;font:inherit;text-decoration:underline;text-underline-offset:3px;color:var(--accent);cursor:pointer}
+.life-hint{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-top:16px;border:1px dashed var(--line);border-radius:7px;padding:18px 22px;background:var(--bg)}
+.life-hint>div{display:flex;gap:12px;align-items:center}
+.life-hint svg{width:18px;height:18px;stroke:var(--accent);fill:none}
+.life-hint p{font-size:13px;margin:0;color:var(--muted);line-height:1.5}
+.life-hint p strong{color:var(--ink);font-weight:550}
+.life-hint .text-button{font-size:12px}
+.life-detail{border:1px solid var(--line);border-radius:8px;background:var(--paper);margin-top:17px;overflow:hidden;animation:eng-appear .2s ease-out}
+.life-detail-head{display:flex;align-items:center;justify-content:space-between;gap:20px;border-bottom:1px solid var(--line);padding:20px 22px}
+.life-detail-heading{display:flex;align-items:center;gap:16px}
+.life-detail-code{font-size:17px;line-height:1;background:var(--accent-soft);color:var(--accent);padding:13px;border-radius:5px;min-width:67px;text-align:center;font-weight:600}
+.life-detail-heading h2{font-size:18px;font-weight:600;margin:0 0 5px}
+.life-detail-heading p{font-size:12px;color:var(--muted);margin:0}
+.life-detail-actions{display:flex;gap:12px;align-items:center}
+.life-detail-actions .button{font-size:12px;height:36px}
+.life-detail-content{padding:20px 22px}
+.life-periods{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin:0 0 22px}
+.life-period{border-left:2px solid var(--line);padding:1px 0 1px 13px}
+.life-period.primary{border-color:var(--accent)}
+.life-period label{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--muted);margin-bottom:6px}
+.life-period strong{display:block;font-weight:550;font-size:14px;color:var(--ink)}
+.life-period input[type=date]{font-size:14px;padding:5px 7px;height:32px;border:1px solid var(--line);border-radius:4px;max-width:165px;background:var(--bg);color:var(--ink)}
+.life-period input[type=number]{width:46px;height:25px;font-size:12px;padding:3px 5px;border:1px solid var(--line);border-radius:3px;background:var(--paper);color:var(--ink)}
+.life-package-count{font-size:12px;color:var(--muted);margin:0 0 14px}
+.life-package-count strong{color:var(--ink);font-weight:550}
+.life-detail .eng-delivery-columns{gap:22px}
+.life-detail .eng-delivery-group h4{font-size:11px;letter-spacing:.7px;margin:0 0 7px;color:var(--muted);font-weight:500}
+.life-detail .eng-delivery-item{display:flex;align-items:center;gap:10px;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);min-height:62px}
+.life-detail .eng-delivery-item>button:first-child{flex:1;min-width:0;font-size:13px;text-align:left;color:var(--ink);padding:0;border:0;background:none}
+.life-detail .eng-delivery-item strong{font-size:13px;font-weight:550;display:block}
+.life-detail .eng-delivery-item small{font-size:11px;color:var(--muted);display:block;margin-top:4px}
+.life-detail .eng-doc-badge{font-size:10.5px;white-space:nowrap}
+.life-detail-footer{padding:12px 22px;border-top:1px solid var(--line);font-size:11.5px;line-height:1.6;color:var(--muted);display:flex;justify-content:space-between;gap:18px;align-items:center}
+.life-detail-footer .text-button{font-size:12px;white-space:nowrap}
+.life-settings{border:1px solid var(--line);border-radius:8px;background:var(--paper);padding:20px 22px;margin-bottom:16px}
+.life-settings-title{display:flex;justify-content:space-between;align-items:center;gap:20px;margin:0 0 20px}
+.life-settings-title h2{font-size:17px;font-weight:600;margin:0}
+.life-settings-dates{display:flex;align-items:end;gap:24px;flex-wrap:wrap}
+.life-field{font-size:12px;color:var(--muted);display:flex;flex-direction:column;gap:8px}
+.life-field input{height:34px;padding:4px 9px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font-size:13px;max-width:180px}
+.life-field input[type=number]{width:95px}
+.life-duration-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:12px;padding:18px 0 20px;border-bottom:1px solid var(--line)}
+.life-duration-grid input{width:100%!important;max-width:none}
+.life-duration-grid small{font-size:11px;color:var(--muted)}
+.life-selection-head{display:flex;align-items:center;justify-content:space-between;margin-top:18px;margin-bottom:14px;gap:20px}
+.life-selection-head strong{font-weight:550;font-size:13px}
+.life-selection-head .text-button{font-size:12px}
+.life-review-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px 20px}
+.life-choice{display:flex;gap:8px;align-items:start;cursor:pointer;border:1px solid var(--line);padding:10px;border-radius:5px}
+.life-choice input{accent-color:var(--accent);margin:2px 0 0;width:14px;height:14px;flex-shrink:0}
+.life-choice strong{font-size:12px;font-weight:600;display:block;margin-bottom:3px}
+.life-choice small{font-size:11px;line-height:1.5;color:var(--muted);display:block}
+.life-settings .life-note{margin-bottom:0}
+.life-reference{background:var(--soft);border-left:2px solid var(--accent);padding:13px 17px;color:var(--muted);font-size:13px;line-height:1.65;margin:0 0 18px}
+.life-reference p{margin:0 0 12px}
+.life-reference .button{font-size:12px}
+.life-glossary{padding:18px 20px;border-top:1px solid var(--line);display:grid;grid-template-columns:repeat(3,1fr);gap:14px 26px;background:var(--bg)}
+.life-glossary button{text-align:left;display:flex;gap:10px;align-items:start;background:none;border:0;font-size:12px;line-height:1.4;padding:0;color:var(--ink)}
+.life-glossary button strong{min-width:64px;font-size:12px;color:var(--accent)}
+.life-glossary button span{color:var(--muted);font-size:12px}
+.life-doc-graphic{border:1px solid var(--line);border-radius:6px;overflow-x:auto;margin:18px 0;background:var(--paper)}
+.life-doc-graphic .life-chart{min-width:730px}
+@media(max-height:800px){.life-toolbar{min-height:53px;padding:10px 18px}.life-legend{padding:11px 18px}.life-hint{margin-top:12px;padding:13px 17px}.life-note{margin-top:9px;margin-bottom:12px}#schedule-module .workspace-head{margin-bottom:15px}}
+@media(max-width:1150px){.life-review-grid{grid-template-columns:repeat(3,1fr)}.life-legend{font-size:11px}.life-title span{display:none}.life-detail .eng-delivery-columns{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){.life-scroll{scroll-behavior:auto}.life-detail{animation:none}}

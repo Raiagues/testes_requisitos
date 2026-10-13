@@ -1,0 +1,44 @@
+name: Norte
+on:
+  push:
+    paths: ['norte/**', '!norte/**/*.md', '!norte/*.txt', 'render.yaml', '.github/workflows/norte.yml']
+  pull_request:
+    paths: ['norte/**', '!norte/**/*.md', '!norte/*.txt', 'render.yaml', '.github/workflows/norte.yml']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: norte
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: 24.20.0
+          cache: npm
+          cache-dependency-path: norte/package-lock.json
+      - run: npm ci --ignore-scripts
+      - run: npm run build
+      - run: npm run check
+      - run: npm run scan:secrets
+      - run: npm audit --audit-level=moderate
+      - run: npm test
+      - run: npm run test:db
+        env:
+          POSTGRES_BIN: /force-docker-for-isolated-tests
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - run: docker build -t norte:ci .
+      - run: node scripts/smoke-container.cjs norte:ci
+      - uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        if: always()
+        with:
+          name: norte-evidencias-sinteticas
+          path: norte/test-results
+          retention-days: 7

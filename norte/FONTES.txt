@@ -1,0 +1,186 @@
+REGISTRO LEGADO DE FICHAS DE REFERÊNCIA
+
+A situação operacional atual, as edições conferidas e as licenças estão em
+FONTES_E_LICENCAS.md. As fichas abaixo foram preservadas para rastreabilidade;
+elas não afirmam que existe análise integral ou autorização de redistribuição.
+
+FONTES DO CATÁLOGO NORTE
+Consulta em 12 de outubro de 2026
+
+Cada ficha do catálogo identifica sua fonte. As listas são recortes de aplicação, não garantias de cobertura integral. Não foram incluídos textos completos de normas licenciadas.
+
+ECSS-E-ST-10-06C · 2009
+https://ecss.nl/standard/ecss-e-st-10-06c-technical-requirements-specification/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-E-ST-10C · Rev. 1 · 2017
+https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements-15-february-2017/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-E-ST-10-02C · Rev. 1 · 2018
+https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-M-ST-10-01C · 2008
+https://ecss.nl/standard/ecss-m-st-10-01c-organization-and-conduct-of-reviews/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-E-ST-10-03C · Rev. 1 · 2022
+https://ecss.nl/standards/active-standards/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-E-ST-10-24C · Rev. 1 · 2024
+https://ecss.nl/standards/active-standards/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-E-ST-40C · Rev. 1 · 2025
+https://ecss.nl/standards/active-standards/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-Q-ST-10C · Rev. 1 · 2016
+https://ecss.nl/standards/active-standards/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-Q-ST-40C · Rev. 1 · 2017
+https://ecss.nl/standards/active-standards/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+ECSS-M-ST-40C · Rev. 1 · 2009
+https://ecss.nl/standards/active-standards/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+NASA Systems Engineering Handbook · SP-2016-6105 · Rev. 2
+https://www.nasa.gov/reference/appendix-c-how-to-write-a-good-requirement/
+Aplicação · Guia de engenharia. Não cria, por si só, uma obrigação legal ou contratual para um projeto brasileiro.
+
+NASA NPR 7123.1D · Change 2 · vigente na consulta
+https://nodis3.gsfc.nasa.gov/displayDir.cfm?t=NPR&c=7123&s=1D
+Aplicação · Aplica-se no âmbito definido pela NASA e quando incorporada ao contrato. A aplicabilidade deve ser confirmada pelo responsável do projeto.
+
+INCOSE Systems Engineering Handbook · Edição adotada pela equipe
+https://www.incose.org/resources-publications/technical-publications/se-handbook/
+Aplicação · Referência de processos. As entregas devem ser escolhidas com base no projeto, no contrato e no texto licenciado.
+
+ISO/IEC/IEEE 29148 · 2018
+https://www.iso.org/standard/72089.html
+Aplicação · Confirmar a edição e o escopo contratado no texto licenciado. A ficha pública da ISO não é suficiente para uma lista completa de obrigações documentais.
+
+ISO/IEC/IEEE 15288 · 2023
+https://www.iso.org/standard/81702.html
+Aplicação · Confirmar a edição e o escopo contratado no texto licenciado. A ficha pública da ISO não é suficiente para uma lista completa de obrigações documentais.
+
+ISO 9001 · 2026
+https://www.iso.org/standard/9001
+Aplicação · Confirmar a edição e o escopo contratado no texto licenciado. A ficha pública da ISO não é suficiente para uma lista completa de obrigações documentais.
+
+ISO/IEC 27001 · 2022 · Amd 1 de 2024
+https://www.iso.org/standard/27001
+Aplicação · Confirmar a edição e o escopo contratado no texto licenciado. A ficha pública da ISO não é suficiente para uma lista completa de obrigações documentais.
+
+ISO 24113 · 2023
+https://www.iso.org/standard/83494.html
+Aplicação · Para sistemas espaciais não tripulados no escopo da norma, incluindo objetos e estágios orbitais. Confirmar sua adoção e a edição contratual.
+
+Lei 14.946 · 2024
+https://www.planalto.gov.br/ccivil_03/_ato2023-2026/2024/lei/l14946.htm
+Aplicação · Atividades espaciais abrangidas pela lei. Um estudo conceitual não deve ser confundido com uma operação que já exige autorização.
+
+Anatel · Resolução 777 · 2025 · texto consolidado
+https://informacoes.anatel.gov.br/legislacao/resolucoes/2025/2022-resolucao-777
+Aplicação · A modalidade depende da finalidade do serviço. Radioamador não se destina a objetivos pecuniários ou comerciais.
+
+Anatel · Resolução 748 · 2021 · texto consolidado
+https://informacoes.anatel.gov.br/legislacao/resolucoes/2021/1595-resolucao-748
+Aplicação · Quando a exploração de satélite estiver abrangida pelo regulamento. Ler o texto consolidado e as alterações posteriores.
+
+Lei Geral de Proteção de Dados · Lei 13.709/2018 · consolidada
+https://www.planalto.gov.br/ccivil_03/_ato2015-2018/2018/lei/l13709.htm
+Aplicação · Aplica-se ao tratamento de dados pessoais no escopo da lei. Dados técnicos sem informação pessoal têm outros controles.
+
+ITU Radio Regulations · 2024
+https://www.itu.int/pub/R-REG-RR-2024
+Aplicação · Aplicação conforme serviço, região e coordenação pela administração competente. Não substitui a autorização brasileira.
+
+CCSDS Blue Books · Publicação selecionada por interface
+https://ccsds.org/publications/bluebooks/
+Aplicação · Escolher o Blue Book e a edição para cada interface. A família inteira não é automaticamente aplicável.
+
+ECSS-E-ST-50C · Rev. 2 · 2024
+https://ecss.nl/standards/active-standards/
+Aplicação · Quando a norma integra o contrato. A matriz de aplicabilidade do projeto define as entregas adotadas e os ajustes aceitos.
+
+Lei 9.112 · 1995 · texto consolidado
+https://www.planalto.gov.br/ccivil_03/leis/l9112.htm
+Aplicação · Para bens e serviços sujeitos ao controle brasileiro. A lista vigente, a classificação, o destino e o uso final precisam ser examinados.
+
+ITAR · 22 CFR · subchapter M
+https://www.ecfr.gov/current/title-22/chapter-I/subchapter-M/part-120/subpart-C/section-120.50
+Aplicação · Primeiro confirmar jurisdição, classificação e acesso a dados. Não é uma norma geral de projeto espacial.
+
+EAR · 15 CFR · partes 730 a 774
+https://www.ecfr.gov/current/title-15/subtitle-B/chapter-VII/subchapter-C/part-734
+Aplicação · Determinar jurisdição, classificação, usuário final, destino e uso final. A parte 734 trata do escopo.
+
+MTCR · Diretrizes e anexo de controle
+https://www.mtcr.info/en/mtcr-guidelines
+Aplicação · Orienta controles de exportação implementados pelos países. Não é uma proibição geral de foguetes nem uma regra que transforma automaticamente um projeto em crime.
+
+
+DOCUMENTOS, REVISÕES E VERIFICAÇÃO
+Conferência das referências em 12 de outubro de 2026.
+
+NASA NPR 7123.1D, Change 2, capítulo 5
+https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_&page_name=Chapter5
+5.1.5 trata as revisões como eventos ligados à maturidade. 5.2.2.2 define produtos mínimos em revisões associadas. 5.2.2.4 diferencia rascunho final e configuração aprovada. 5.2.3 trata a conclusão e seus registros. Os valores de semana da demo não vêm desta referência.
+
+NASA NPR 7123.1D, capítulo 6
+https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_&page_name=Chapter6
+SEMP e possibilidade de incorporar conteúdo a outros documentos.
+
+NASA NPR 7123.1D, apêndice G
+https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_&page_name=AppendixG
+Orientação para critérios de entrada e sucesso. Não representa uma lista exaustiva de todas as entregas de um programa.
+
+NASA Systems Engineering Handbook, 5.3 e apêndice D
+https://www.nasa.gov/reference/5-3-product-verification/
+Métodos e planejamento de verificação. O formato de matriz em arquivo separado é uma escolha desta implementação.
+
+ECSS-E-ST-10C Rev.1, 15 fevereiro 2017
+https://ecss.nl/standard/ecss-e-st-10c-rev-1-system-engineering-general-requirements-15-february-2017/
+Requisitos gerais e definições de produtos documentais. Anexos B, C, D, G e N no recorte. Verificar aplicabilidade por produto e adaptações.
+
+ECSS-E-ST-10-06C, 6 março 2009
+https://ecss.nl/standard/ecss-e-st-10-06c-technical-requirements-specification/
+Especificação técnica, atributos e Anexo A.
+
+ECSS-E-ST-10-02C Rev.1, 1 fevereiro 2018
+https://ecss.nl/standard/ecss-e-st-10-02c-rev-1-verification-1-february-2018/
+5.2.8.1 e Anexo A para VP. 5.2.8.2 e Anexo B para VCD. Entregas nas revisões acordadas com o cliente. 5.3.2 para registros de resultado conforme método. Demonstração é incluída no método Teste.
+
+ECSS-M-ST-10-01C, 15 novembro 2008
+https://ecss.nl/standard/ecss-m-st-10-01c-organization-and-conduct-of-reviews/
+Preparação, execução, discrepâncias e relatórios de revisão. Anexos A a D. O arquivo combinado da demo não substitui todos os registros formais aplicáveis.
+
+ECSS-M-ST-10C Rev.1, 6 março 2009
+https://ecss.nl/standard/ecss-m-st-10c-rev-1-project-planning-and-implementation/
+Planejamento e ciclo de vida. O calendário e as durações da demo são escolhas da equipe Aurora.
+
+Os arquivos gerados são documentos de trabalho da Norte. As publicações originais continuam nos endereços das entidades. Não se distribui o texto integral licenciado das normas ECSS ou ISO.
+
+
+DIAGRAMA DE CICLO DE VIDA
+
+ECSS-M-ST-10C Rev.1, Project planning and implementation, 6 março 2009
+https://ecss.nl/standard/ecss-m-st-10c-rev-1-project-planning-and-implementation/
+https://ecss.nl/wp-content/uploads/standards/ecss-m/ECSS-M-ST-10C_Rev.16March2009.pdf
+Figura 4-3, página 19. Seção 4.4 e descrição das fases nas páginas 22 a 27. A fase E inclui lançamento. MCR no final do ciclo é Mission Close-out Review. O Anexo F é informativo e não substitui o acordo contratual dos documentos por revisão.
+
+NASA Systems Engineering Handbook, NASA/SP-2016-6105 Rev.2, capítulo 3
+https://www.nasa.gov/reference/3-0-nasa-program-project-life-cycle/
+Seções 3.3 a 3.9 para Pré-A e fases A a F. O MCR inicial é Mission Concept Review. O lançamento é mostrado no encerramento da fase D. PRR, CERR e PFAR não foram ativadas no exemplo inicial. A pertinência de cada revisão depende do projeto.
+
+NASA NPR 7123.1D, Appendix G
+https://nodis3.gsfc.nasa.gov/displayDir.cfm?Internal_ID=N_PR_7123_001D_&page_name=AppendixG
+Critérios das revisões e distinção entre maturidade técnica, planejamento e conclusão da revisão.
+
+As datas, as semanas de duração e os períodos de preparação e fechamento usados na Norte são parâmetros do projeto conceitual Aurora. Não são prazos definidos por essas referências. A visualização comparativa não estabelece equivalência entre os dois ciclos de vida.

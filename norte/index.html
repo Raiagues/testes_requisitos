@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Entenda o que seu projeto precisa atender, como verificar cada requisito e o que entregar em cada revisão. Conecte normas, testes, documentos e cronograma em um só lugar.">
+<title>Norte · O norte do seu projeto espacial</title>
+<link rel="stylesheet" href="/assets/norte.css">
+</head>
+<body>
+<svg class="svg-defs" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>
+<symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-6-6 6 6-6 6"/></symbol>
+<symbol id="i-back" viewBox="0 0 24 24"><path d="M19 12H5m6-6-6 6 6 6"/></symbol>
+<symbol id="i-close" viewBox="0 0 24 24"><path d="m6 6 12 12M6 18 18 6"/></symbol>
+<symbol id="i-plus" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></symbol>
+<symbol id="i-search" viewBox="0 0 24 24"><circle cx="10" cy="10" r="6"/><path d="m15 15 5 5"/></symbol>
+<symbol id="i-file" viewBox="0 0 24 24"><path d="M14 3H5v18h14V8zM14 3v5h5M8 12h8M8 16h6"/></symbol>
+<symbol id="i-check" viewBox="0 0 24 24"><path d="m5 12 4 4L19 6"/></symbol>
+<symbol id="i-sliders" viewBox="0 0 24 24"><path d="M4 6h4m4 0h8M4 12h10m4 0h2M4 18h2m4 0h10"/><circle cx="10" cy="6" r="2"/><circle cx="16" cy="12" r="2"/><circle cx="8" cy="18" r="2"/></symbol>
+<symbol id="i-download" viewBox="0 0 24 24"><path d="M12 3v12m-5-5 5 5 5-5M5 15v5h14v-5"/></symbol>
+<symbol id="i-chevron" viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></symbol>
+<symbol id="i-moon" viewBox="0 0 24 24"><path d="M20 15.5A8.5 8.5 0 0 1 8.5 4 8.5 8.5 0 1 0 20 15.5Z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2m0 16v2M2 12h2m16 0h2M5 5l1 1m12 12 1 1M5 19l1-1M18 6l1-1"/></symbol>
+<symbol id="i-pencil" viewBox="0 0 24 24"><path d="m15 4 5 5M4 20l1-6L16 3a2 2 0 0 1 5 5L10 19z"/></symbol>
+<symbol id="i-copy" viewBox="0 0 24 24"><path d="M8 8h12v13H8zM16 8V3H3v13h5"/></symbol>
+<symbol id="i-flag" viewBox="0 0 24 24"><path d="M5 21V3m0 1c4-3 9 3 14 0v10c-5 3-10-3-14 0"/></symbol>
+<symbol id="i-info" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 11v6m0-10v1"/></symbol>
+<symbol id="i-shield" viewBox="0 0 24 24"><path d="m12 3 8 3v5c0 5-5 9-8 10-3-1-8-5-8-10V6z"/><path d="m8 12 3 3 5-6"/></symbol>
+
+<symbol id="i-layers" viewBox="0 0 24 24"><path d="m3 7 9-4 9 4-9 4zM3 12l9 4 9-4M3 17l9 4 9-4"/></symbol>
+<symbol id="i-compass" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="m16 7-2 7-7 3 3-7z"/></symbol>
+<symbol id="i-grid" viewBox="0 0 24 24"><rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><rect x="14" y="14" width="6" height="6" rx="1"/></symbol>
+<symbol id="i-globe" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><ellipse cx="12" cy="12" rx="4" ry="9"/><path d="M3 12h18M5 7h14M5 17h14"/></symbol>
+<symbol id="i-signal" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2"/><path d="m10 14-3 7h10l-3-7M7 7a7 7 0 0 0 0 10M17 7a7 7 0 0 1 0 10M4 4a11 11 0 0 0 0 16M20 4a11 11 0 0 1 0 16"/></symbol>
+<symbol id="i-chat" viewBox="0 0 24 24"><path d="M20 15a3 3 0 0 1-3 3H9l-5 3V6a3 3 0 0 1 3-3h10a3 3 0 0 1 3 3zM8 8h8M8 12h5"/></symbol>
+<symbol id="i-clock" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6v6l4 2"/></symbol>
+<symbol id="i-user" viewBox="0 0 24 24"><circle cx="12" cy="7" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></symbol>
+</defs></svg>
+<div class="application">
+<header class="site-header">
+<button class="brand" data-action="home" aria-label="Norte, página inicial"><svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true"><circle cx="20" cy="20" r="15"/><path d="m24 8-1 15-15 9 9-15z"/><path d="m17 17 6 6M20 1v4m0 30v4M1 20h4m30 0h4"/></svg><span>norte<span class="brand-dot">.</span></span></button>
+<div class="header-actions"><button class="text-button" data-platform="account" id="account-button">Entrar</button><button id="theme-button" class="icon-button" data-action="theme" aria-label="Ativar tema escuro" title="Ativar tema escuro"><svg><use href="#i-moon"/></svg></button><button class="button primary request-button" data-action="order">Solicitar produto<svg><use href="#i-arrow"/></svg></button></div>
+</header>
+<div class="shell" id="shell">
+<main id="main-content">
+<section id="home" class="home">
+<div class="landing-wrap">
+<section class="n-hero" aria-labelledby="hero-title">
+<div class="hero-layout">
+<div class="hero-copy"><h1 id="hero-title">O norte do seu<br><span>projeto espacial.</span></h1><p class="hero-description">Entenda o que seu projeto precisa atender, como verificar cada requisito e o que entregar em cada revisão. Conecte normas, testes, documentos e cronograma em um só lugar.</p><button class="n-text-link" data-action="workspace">Explorar a plataforma<svg><use href="#i-arrow"/></svg></button></div>
+<div class="product-preview n-demo" id="hero-demo" aria-label="Requisitos da missão Aurora"></div>
+</div>
+<div class="product-benefits"><div><span class="benefit-number">01</span><p><strong>Organize os requisitos</strong><span>Origem, verificação e responsáveis.</span></p></div><div><span class="benefit-number">02</span><p><strong>Confira a fonte</strong><span>O motivo de cada apontamento.</span></p></div><div><span class="benefit-number">03</span><p><strong>Registre a decisão</strong><span>Revisões e documentos para baixar.</span></p></div></div>
+</section>
+<section class="n-section" id="catalogue" aria-labelledby="catalogue-title">
+<div class="n-section-head"><div><p class="eyebrow">REFERÊNCIAS E ENTREGAS</p><h2 id="catalogue-title">A base técnica do seu projeto.</h2><p>Explore as referências e os documentos de cada uma.</p></div><label class="n-catalogue-search"><svg><use href="#i-search"/></svg><input type="search" id="catalogue-search" placeholder="Buscar norma ou assunto" aria-label="Buscar no catálogo"></label></div>
+<div class="n-catalogue-grid" id="catalogue-groups"></div>
+<div class="n-catalogue-content" id="catalogue-content" hidden></div>
+<p class="n-catalogue-foot"><span id="catalogue-count">29 referências</span><span>•</span><span>Obrigatoriedade conforme aplicação e contrato</span></p>
+</section>
+<section class="n-section n-config-section" id="configure" aria-labelledby="configure-title">
+<div class="n-section-head"><div><p class="eyebrow">DO PRIMEIRO TESTE AO SEU PROJETO</p><h2 id="configure-title">Escolha como começar.</h2><p>Teste com um exemplo ou escolha uma entrega para a sua equipe.</p></div></div>
+<div class="n-config-grid">
+<div class="n-config-card">
+<div class="n-mode" role="group" aria-label="Como começar"><button type="button" data-norte="mode" data-value="test" aria-pressed="false"><span>Testar primeiro</span><small>Sem custo e sem cadastro</small></button><button type="button" data-norte="mode" data-value="project" aria-pressed="true"><span>Para meu projeto</span><small>Escopo e revisão à sua escolha</small></button></div>
+<div id="plan-fields"></div>
+</div>
+<aside class="n-price-card" aria-label="Resumo do pedido">
+<div id="price-summary" aria-live="polite" aria-atomic="true"></div>
+<div id="price-actions"><button type="button" class="button primary n-full" id="continue-order" data-norte="continue">Continuar<svg><use href="#i-arrow"/></svg></button><p class="n-price-caption" id="continue-caption">Confirme o contato na próxima etapa.</p></div>
+<div id="contact-panel" hidden>
+<div class="n-contact-heading"><h3>Como falamos com você?</h3><p>A equipe confirma o escopo e combina o pagamento por e-mail.</p></div>
+<form id="contact-form"><label class="n-field"><span>Seu nome</span><input name="name" id="contact-name" autocomplete="name" minlength="2" maxlength="100" required></label><label class="n-field"><span>E-mail de trabalho</span><input name="email" id="contact-email" type="email" autocomplete="email" maxlength="180" required></label><label class="n-consent"><input type="checkbox" name="consent" id="contact-consent" required><span>Pode me chamar por e-mail sobre este pedido.</span></label><button class="button primary n-full" type="submit" id="submit-request">Solicitar contratação<svg><use href="#i-arrow"/></svg></button><button class="n-defer" type="button" data-norte="defer">Deixar para depois</button></form><div id="submission-message" role="status"></div>
+</div>
+<div id="order-success" hidden></div>
+<div class="n-feedback" id="feedback-box" hidden></div>
+</aside>
+</div>
+</section>
+<footer class="n-footer">
+<div><span class="n-footer-brand">norte<span>.</span></span><p>Engenharia de requisitos.</p></div>
+<div class="n-footer-notes">
+<details id="technical-note"><summary>Sobre as verificações</summary><p>O exemplo Aurora usa checagens de redação e de campos preenchidos. As fontes são reais. A tabela não faz uma interpretação completa das 29 referências do catálogo e não emite uma aprovação técnica ou regulatória. Use apenas conteúdo público ou autorizado neste teste.</p></details>
+<details id="privacy-note"><summary>Dados e privacidade</summary><p>O Aurora sem conta é uma demonstração nesta aba. Projetos autenticados são salvos no banco, e seus documentos gerados ficam em armazenamento privado. O tema é a única preferência salva no navegador. A ajuda recebe somente o tópico público selecionado. A análise técnica externa exige habilitação e autorização específica; não envie dados restritos. Pedidos registram a configuração, o valor e o contato autorizado. Não usamos ferramentas de publicidade. Uma resposta sobre desistência só é enviada se você selecionar uma opção.</p><p id="service-contact">Responsável pelo serviço e contato de privacidade: configuração pendente.</p></details>
+<details><summary>Como ler o catálogo</summary><p>Esta é uma seleção de referências para projetos espaciais, não uma lista de toda a legislação aplicável. Leis, normas técnicas e guias têm papéis diferentes. Os documentos marcados como exigidos dependem do escopo indicado. Quando o texto integral não foi mapeado, a ficha mostra que a lista precisa ser confirmada. Modelos da Norte não são publicações oficiais. Consulta das fontes em 12 de outubro de 2026.</p></details>
+</div>
+</footer>
+</div>
+
+</section>
+<section id="account-page" class="account-page" hidden></section>
+<section class="workspace" id="workspace" hidden>
+<div class="eng-navigation"><div class="eng-project"><span class="eng-project-mark"><svg><use href="#i-compass"/></svg></span><div><strong>Missão Aurora</strong><span>Engenharia de sistemas</span></div></div><nav class="eng-nav" aria-label="Áreas do projeto"><button data-engine="module" data-module="requirements" aria-current="page"><svg><use href="#i-layers"/></svg>Requisitos</button><button data-engine="module" data-module="verification"><svg><use href="#i-check"/></svg>Verificação</button><button data-engine="module" data-module="documents"><svg><use href="#i-file"/></svg>Documentos</button><button data-engine="module" data-module="schedule"><svg><use href="#i-clock"/></svg>Cronograma</button></nav><span class="eng-session" id="save-state" role="status">Projeto de demonstração</span><button class="text-button" data-platform="projects">Meus projetos</button></div>
+<section id="req-module" class="eng-module">
+<div class="workspace-head"><div><h1>Requisitos</h1><p class="eng-subtitle">Da origem à verificação, em um só registro.</p></div><div class="workspace-actions"><div class="eng-anchor"><button class="button secondary" data-action="settings" id="analysis-config-button" aria-expanded="false"><svg><use href="#i-sliders"/></svg>Configurar análise</button><div id="analysis-popover" class="eng-popover" hidden></div></div><div class="eng-anchor"><button class="button secondary" data-engine="add-requirement" id="add-req-button" aria-expanded="false"><svg><use href="#i-plus"/></svg>Adicionar requisito</button><div id="requirement-popover" class="eng-popover eng-popover-wide" hidden></div></div><button class="button primary" data-action="analyse-all"><svg><use href="#i-check"/></svg>Analisar</button></div></div>
+<div class="filterbar"><label class="search-field"><svg><use href="#i-search"/></svg><input id="search" type="search" placeholder="Buscar requisito ou ID" aria-label="Buscar requisito ou ID"></label><label class="filter-control"><span>Subsistema</span><select id="filter-subsystem" aria-label="Filtrar por subsistema"><option value="">Todos</option></select></label><label class="filter-control"><span>Resultado</span><select id="filter-status" aria-label="Filtrar por resultado"><option value="">Todos</option><option value="issues">Com apontamentos</option><option value="regulatory">Revisão regulatória</option><option value="clear">Sem alertas</option><option value="pending">A analisar</option></select></label><div class="eng-anchor"><button class="icon-button" data-action="filters" aria-label="Mais filtros"><svg><use href="#i-sliders"/></svg></button><div id="filters-popover" class="eng-popover" hidden></div></div></div>
+<div class="table-context"><span id="table-summary">6 requisitos</span><button class="text-button" data-action="settings" id="settings-summary">Configurar análise</button></div>
+<div class="table-area eng-scroll" id="table-area" tabindex="0" aria-label="Lista de requisitos com rolagem"><table class="requirements-table"><colgroup><col class="col-id"><col class="col-text"><col class="col-sub"><col class="col-method"><col class="col-origin"><col class="col-status"></colgroup><thead><tr><th>ID</th><th>Requisito</th><th>Subsistema</th><th>Verificação</th><th>Origem</th><th>Resultado</th></tr></thead><tbody id="rows"></tbody></table><div class="empty-state" id="empty-state" hidden><svg><use href="#i-search"/></svg><h2>Nenhum requisito encontrado</h2><p>Altere a busca ou os filtros.</p><button class="button secondary" data-action="clear-filters">Limpar filtros</button></div></div>
+<div class="eng-table-end"><span id="page-count"></span><span>Clique em um requisito para revisar</span></div>
+<div hidden><button id="prev-page"></button><span id="page-label"></span><button id="next-page"></button><form id="quick-add"><input id="new-requirement"></form></div>
+</section>
+<section id="verification-module" class="eng-module" hidden></section>
+<section id="documents-module" class="eng-module" hidden></section>
+<section id="schedule-module" class="eng-module" hidden></section>
+</section>
+</main>
+<aside class="side-panel" id="side-panel" aria-label="Painel de trabalho" hidden></aside>
+</div>
+<footer class="statusbar"><span id="status-message" role="status" aria-live="polite">Norte · Engenharia de requisitos</span><button class="text-button" data-action="about"><svg><use href="#i-info"/></svg>Sobre a análise</button></footer>
+</div>
+<script src="/assets/data.js" defer></script>
+<script src="/assets/catalogue.js" defer></script>
+<script src="/assets/pricing.js" defer></script>
+<script src="/assets/pdf.js" defer></script>
+<script src="/assets/app.js" defer></script>
+<script src="/assets/landing.js" defer></script>
+<button type="button" class="n-chat-launcher" id="chat-launcher" data-norte="chat-toggle" aria-expanded="false" aria-controls="norte-chat"><svg><use href="#i-chat"/></svg>Ajuda</button>
+<section class="n-chat" id="norte-chat" aria-label="Ajuda Norte" hidden>
+<div class="n-chat-header"><div><strong>Ajuda Norte</strong><small>Respostas rápidas sobre o serviço</small></div><button type="button" class="icon-button" data-norte="chat-close" aria-label="Fechar ajuda"><svg><use href="#i-close"/></svg></button></div>
+<div class="n-chat-body" id="chat-body" role="log" aria-live="polite"><p class="n-chat-message">Qual parte você quer entender?</p></div>
+<div class="n-chat-quick"><button data-norte="chat-question">O que recebo?</button><button data-norte="chat-question">Quem revisa?</button><button data-norte="chat-question">Dados e acesso</button><button data-norte="chat-question">Preço e desconto</button><button data-norte="chat-question">Prazos</button></div>
+<form class="n-chat-form" id="chat-form"><input type="text" id="chat-question" aria-label="Sua pergunta" placeholder="Ou escreva sua dúvida" maxlength="500" autocomplete="off"><button type="submit" class="icon-button" aria-label="Enviar pergunta"><svg><use href="#i-arrow"/></svg></button></form>
+</section>
+
+<script src="/assets/engineering-data.js" defer></script>
+<script src="/assets/engineering-export.js" defer></script>
+<script src="/assets/engineering.js" defer></script>
+<script src="/assets/lifecycle.js" defer></script>
+<script src="/assets/platform.js" defer></script>
+<script src="/assets/pdf-viewer.js" defer></script>
+<script src="/assets/commerce.js" defer></script>
+</body>
+</html>

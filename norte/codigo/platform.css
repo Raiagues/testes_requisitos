@@ -1,0 +1,71 @@
+:root { --font-main: system-ui, -apple-system, 'Segoe UI', sans-serif; --surface:var(--paper); --border:var(--line); --text:var(--ink); --brown:var(--accent); --space-1: 8px; --space-2: 12px; --space-3: 16px; --space-4: 24px; --space-5: 32px; }
+body, button, input, textarea, select { font-family: var(--font-main); }
+body { font-size:16px; }
+button, input, select, textarea { font-size:inherit; }
+:focus-visible { outline:2px solid var(--brown,#795b45); outline-offset:3px; }
+.eng-subtitle,.life-note,.helper,.eng-doc-badge,.life-detail-heading p,.life-period label { font-size:14px; line-height:1.55; }
+.life-detail-head { padding:24px; gap:24px; align-items:flex-start; }
+.life-detail-heading { align-items:flex-start; gap:16px; }
+.life-detail-heading h2 { font-size:20px; line-height:1.4; }
+.life-detail-heading p { margin-top:8px; }
+.life-detail-content { padding:24px; }
+.life-periods { gap:24px; margin:0 0 24px; }
+.life-period { min-height:88px; padding:8px 16px; }
+.life-period label { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.life-period input[type=number] { min-width:64px; min-height:36px; padding:4px 8px; }
+.eng-delivery-columns { gap:24px; align-items:start; }
+.eng-delivery-group h4 { padding:16px; font-size:14px; }
+.eng-delivery-item { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:12px 16px; padding:16px; align-items:start; }
+.eng-delivery-item > button:first-child { min-width:0; text-align:left; grid-column:1; line-height:1.5; }
+.eng-delivery-item strong { display:block; font-size:16px; overflow-wrap:anywhere; }
+.eng-delivery-item small { display:block; font-size:13px; margin-top:8px; }
+.eng-delivery-item .eng-doc-badge { justify-self:start; grid-row:2; grid-column:1; white-space:normal; }
+.eng-delivery-item > .icon-button { grid-column:2; grid-row:1 / 3; min-width:40px; min-height:40px; }
+.eng-delivery-item > .applicability-help { grid-column:2; grid-row:3; }
+.eng-delivery-group > .life-note,.eng-delivery-group > .text-button { margin:16px; }
+.life-detail-footer { padding:16px 24px; font-size:14px; gap:16px; }
+.applicability-help { display:inline-block; cursor:help; padding:4px; font-size:15px; color:var(--muted,#776c61); }
+.applicability-help:focus::after,.applicability-help:hover::after { content:attr(aria-label); display:block; position:absolute; background:var(--surface,#fffdf9); color:var(--text,#262421); border:1px solid var(--border,#ded8ce); padding:12px; max-width:300px; z-index:5; font-size:14px; }
+.requirements-table td { padding:16px; font-size:15px; overflow-wrap:anywhere; }
+.requirements-table th { padding:16px; font-size:14px; }
+.account-page { width:min(1100px,100%); margin:0 auto; padding:32px 24px; overflow:auto; }
+.account-page h1 { margin-bottom:16px; font-size:28px; }
+.platform-card { border:1px solid var(--border,#ded8ce); border-radius:8px; background:var(--surface,#fffdf9); padding:24px; margin-bottom:24px; }
+.platform-form { display:grid; gap:16px; max-width:620px; }
+.platform-form label { display:grid; gap:8px; line-height:1.5; }
+.platform-form input,.platform-form select,.platform-form textarea { width:100%; box-sizing:border-box; min-height:44px; padding:10px 12px; color:inherit; background:var(--surface,#fffdf9); border:1px solid var(--border,#ded8ce); border-radius:5px; }
+.platform-form input[type=checkbox] { width:20px; min-height:20px; }
+.platform-actions { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:16px; }
+.project-list { display:grid; gap:16px; }
+.project-card { padding:24px; border:1px solid var(--border,#ded8ce); border-radius:6px; }
+.project-card h2 { font-size:20px; margin:0 0 8px; overflow-wrap:anywhere; }
+.project-card p { line-height:1.6; }
+.platform-error { color:var(--red,#9b4436); line-height:1.6; white-space:pre-line; }
+.platform-note { font-size:14px; line-height:1.6; color:var(--muted,#776c61); margin:12px 0; }
+.platform-dialog { width:min(640px,calc(100vw - 32px)); max-height:85vh; padding:24px; color:var(--text,#262421); background:var(--surface,#fffdf9); border:1px solid var(--border,#ded8ce); border-radius:8px; }
+.platform-dialog::backdrop { background:#211c1780; }
+.platform-dialog h2 { font-size:22px; margin-bottom:16px; }
+.platform-dialog pre { white-space:pre-wrap; overflow-wrap:anywhere; font-size:14px; }
+.save-failed { color:var(--red,#9b4436); }
+.source-reader { position:relative; overflow:auto; max-height:60vh; border:1px solid var(--border,#ded8ce); }
+.source-sheet { position:relative; margin:0 auto; }
+.source-sheet canvas { display:block; }
+.source-highlight { position:absolute; background:#cda34355; border:1px solid #8b652b; pointer-events:none; }
+.pdf-controls { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin:16px 0; }
+.pdf-controls input { max-width:130px; min-height:36px; }
+.read-only-note { background:var(--surface-2,#f1ece5); padding:12px 16px; font-size:14px; }
+html[data-theme=dark] .platform-card,html[data-theme=dark] .platform-dialog,html[data-theme=dark] .platform-form input,html[data-theme=dark] .platform-form textarea,html[data-theme=dark] .platform-form select { background:#26231f; color:#ece7de; border-color:#544a40; }
+@media(max-width:800px) { .eng-delivery-columns,.life-periods { grid-template-columns:1fr; } .life-detail-head { flex-direction:column; } .eng-project { min-width:0; } .eng-navigation { flex-wrap:wrap; height:auto; gap:12px; } .account-page { padding:24px 16px; } .platform-card { padding:16px; } .request-button { font-size:14px; } }
+@media(prefers-reduced-motion:reduce) { *,*::before,*::after { scroll-behavior:auto !important; animation-duration:0s !important; transition-duration:0s !important; } }
+
+.source-paper,.source-quote { font-family:var(--font-main); }
+
+.life-detail .eng-delivery-item { display:grid; grid-template-columns:minmax(0,1fr) 40px; gap:12px 16px; padding:16px; align-items:start; }
+.life-detail .eng-delivery-item strong { font-size:16px; line-height:1.5; }
+.life-detail .eng-delivery-item small { font-size:13px; margin-top:8px; }
+.life-detail .eng-delivery-group h4 { padding:16px; font-size:14px; margin:0; }
+.life-detail .eng-doc-badge { font-size:13px; white-space:normal; }
+
+html[data-theme=dark] .button.primary { background:var(--accent); color:#231d18; border-color:var(--accent); }
+html[data-theme=dark] .button.secondary { background:var(--paper); color:var(--ink); border-color:var(--line); }
+.platform-dialog.pdf-expanded { width: min(1100px, calc(100vw - 32px)); max-width: calc(100vw - 32px); }

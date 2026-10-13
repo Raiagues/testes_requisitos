@@ -1,0 +1,31 @@
+NORTE — O norte do seu projeto espacial.
+
+A interface editável está em codigo/. O build gera dist/ e index.html.
+Use Node 24.20.0. Dentro de norte/:
+
+npm ci --ignore-scripts
+npm run build
+npm run dev
+
+Abra http://127.0.0.1:8080. Sem configuração externa, o Aurora público
+continua navegável; contas, salvamento e contratação permanecem fechados.
+O HTML não é uma aplicação autônoma nem a fonte definitiva dos dados.
+
+CONFIGURAR E PUBLICAR
+
+.env.example e CONFIGURACAO_FINAL.md: variáveis realmente utilizadas e painéis.
+DEPLOY_RENDER.md: migrações, Render, limites de custo e backup/restauração.
+render.yaml fica na raiz do repositório; um único serviço web serve interface/API.
+Supabase fornece Auth, PostgreSQL e Storage privados; não há SQLite em produção.
+
+VALIDAÇÃO E CONTROLES
+
+TESTES.md: resultados executados, simuladores e verificações reais pendentes.
+EXECUCAO.md: decisões e andamento da implementação.
+FONTES_E_LICENCAS.md: edições, citações conferidas, direitos e limitações.
+docs/seguranca/: ameaças, testes, bloqueios e resposta a incidentes.
+SECURITY.md: comunicação de falhas, sem contato fictício.
+
+Não colocar credenciais no HTML, no Git ou em conversas. A oferta exige
+aprovação operacional. Pedido não é pagamento e não ativa plano.
+Uploads/importações continuam fechados até inspeção e isolamento aprovados.

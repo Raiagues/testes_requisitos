@@ -1,0 +1,36 @@
+services:
+  - type: web
+    name: norte
+    runtime: docker
+    plan: free
+    repo: https://github.com/Raiagues/testes_requisitos
+    branch: main
+    rootDir: norte
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    healthCheckPath: /api/health
+    autoDeployTrigger: off
+    maxShutdownDelaySeconds: 60
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: SITE_URL
+        sync: false
+      - key: SESSION_ENCRYPTION_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_PUBLISHABLE_KEY
+        sync: false
+      - key: SUPABASE_SECRET_KEY
+        sync: false
+      - key: SERVICE_OWNER
+        sync: false
+      - key: PRIVACY_CONTACT
+        sync: false
+      - key: REQUIREMENTS_AI_PROVIDER
+        value: none
+      - key: GEMINI_HELP_APPROVED
+        value: "false"
+      - key: REQUIREMENTS_AI_APPROVED
+        value: "false"
