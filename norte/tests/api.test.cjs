@@ -83,3 +83,19 @@ test('rebase preserva edições ainda não salvas, exige escolhas de conflito e 
   saved=undefined; const stale=await agent.post(url).set(headers).send({revision:2,version:2,pending}); assert.equal(stale.status,409); assert.equal(saved,undefined);
   const forged=await agent.post(url).set(headers).send({revision:3,version:2,pending:{...pending,role:'admin'}}); assert.equal(forged.status,422); assert.equal(saved,undefined);
 });
+test('perfil, conversa e contratação rejeitam identidade, preço e comandos forjados',async()=>{
+  const fake=fakeGateway(); const calls=[]; fake.db.rpc=async(name,args)=>{calls.push({name,args});return {data:null,error:null}};
+  const app=createApp({config,gateway:fake.gateway}); const {agent,token}=await bootstrap(app); calls.length=0;
+  const headers={Cookie:'norte-session=synthetic-session',Origin:config.siteUrl,'X-CSRF-Token':token};
+  const profile={name:'Pessoa',company:'Norte',jobTitle:'Admin',discipline:'Sistemas',bio:''};
+  const cases=[['put','/api/account',{version:1,profile:{...profile,admin:true}}],['put','/api/account',{version:1,profile,userId:B}],['put','/api/account/avatar',{version:0,bytes:null,userId:B}],['post','/api/messages',{channel:{projectId:A},key:B,body:'Olá',authorId:B}],['post','/api/messages',{channel:{projectId:A,supportUser:B},key:B,body:'Olá'}],['post','/api/plans/quote',{kind:'individual',company:'',editors:0,reviewers:1,viewers:3,price:0,tools:['shell']}],['post','/api/admin/plans/'+A,{version:1,status:'confirmed',confirm:true}]];
+  for(const[method,url,body]of cases){const response=await agent[method](url).set(headers).send(body);assert.equal(response.status,url.startsWith('/api/admin')?403:422,url);}
+  assert.equal(calls.length,0);assert.deepEqual(fake.actions,[]);
+});
+test('acompanhamento é desligado por padrão e exige MFA mesmo quando habilitado',async()=>{
+  for(const enabled of[false,true]){const fake=fakeGateway();const app=createApp({config:{...config,prototypeAdmin:enabled},gateway:fake.gateway});const response=await request(app).get('/api/admin/people').set('Cookie','norte-session=synthetic-session');assert.equal(response.status,enabled?403:404);assert.deepEqual(fake.serviceReads,[]);}
+});
+test('foto removida é vinculada à identidade autenticada, nunca a um ID enviado pelo cliente',async()=>{
+  const fake=fakeGateway();const app=createApp({config,gateway:fake.gateway});const{agent,token}=await bootstrap(app);
+  const response=await agent.put('/api/account/avatar').set({Cookie:'norte-session=synthetic-session',Origin:config.siteUrl,'X-CSRF-Token':token}).send({version:3,bytes:null});assert.equal(response.status,200);assert.deepEqual(fake.actions[0],{name:'norte_avatar_write',args:{p_user:A,p_bytes:null,p_version:3}});
+});

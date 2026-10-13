@@ -3,6 +3,9 @@ const assert = require('node:assert/strict');
 const crypto = require('node:crypto');
 const {capture,restore,seal,unseal} = require('../scripts/backup.cjs');
 async function testRestore(source,connection,bootstrap) {
+  const avatarOwner = '00000000-0000-4000-8000-000000000002';
+  const avatarBytes = await require('sharp')({create:{width:256,height:256,channels:3,background:'#82533d'}}).webp().toBuffer();
+  await source.query('update norte_private.profiles set avatar=$1,avatar_version=avatar_version+1 where user_id=$2',[avatarBytes,avatarOwner]);
   const files = new Map((await source.query('select bucket_id,name from storage.objects')).rows.map(row => [row.bucket_id + '/' + row.name,Buffer.from('%PDF-synthetic-backup') ]));
   const backup = await capture(source,{read:async (bucket,name) => files.get(bucket + '/' + name)});
   const key = crypto.randomBytes(32).toString('hex'); const encoded = seal(backup,key); const decoded = unseal(encoded,key);
@@ -17,6 +20,9 @@ async function testRestore(source,connection,bootstrap) {
     assert.equal((await target.query('select deleted_at is not null as gone from norte_projects where id=$1',[deleted])).rows[0].gone,true);
     assert.equal((await target.query("select count(*) from norte_jobs where status in ('running','queued')")).rows[0].count,'0');
     assert.equal((await target.query('select ai_enabled from norte_controls')).rows[0].ai_enabled,false);
+    assert.deepEqual((await target.query('select avatar from norte_private.profiles where user_id=$1',[avatarOwner])).rows[0].avatar,avatarBytes);
+    assert.equal((await target.query('select count(*) from norte_private.prototype_observers where enabled')).rows[0].count,'0');
+    assert.equal((await target.query('select count(*) from norte_plan_catalog where approved')).rows[0].count,'0');
     assert.ok(restoredFiles.size > 0); for (const [name,bytes] of restoredFiles) { assert.deepEqual(bytes,files.get(name)); }
     const triggers = await target.query("select tgname from pg_trigger where tgrelid in (select oid from pg_class where relname like 'norte_%') and tgenabled='D'"); assert.equal(triggers.rowCount,0);
     await target.query('set role authenticated'); await target.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({sub:'00000000-0000-4000-8000-000000000002',aal:'aal1'})]);

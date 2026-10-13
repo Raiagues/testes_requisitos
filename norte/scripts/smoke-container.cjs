@@ -17,6 +17,11 @@ for (const file of ['/app/.env','/app/.git','/app/dados-privados','/app/backups'
   const template = JSON.parse(fs.readFileSync('/app/dist/templates.json','utf8'));
   const project = {id:'synthetic',name:'Teste do contêiner',profile:'NASA',version:1,updated_at:'2026-10-12T12:00:00Z',payload:{requirements:template.requirements,verifications:template.verifications,engineering:template.engineering}};
   const {renderIsolated} = require('/app/server/jobs.cjs');
+  const sharp = require('/app/node_modules/sharp');
+  const avatarInput = await sharp({create:{width:64,height:64,channels:3,background:'#82533d'}}).png().toBuffer();
+  const avatar = Buffer.from(await require('/app/server/avatars.cjs').normalizeAvatar(avatarInput.toString('base64')),'base64');
+  assert.equal((await sharp(avatar).metadata()).width,256);
+  console.log('PASS CONTAINER foto reprocessada sem rede, credenciais ou escrita no filesystem.');
   for (const format of ['pdf','docx','zip']) { const result = await renderIsolated({snapshot:project,input:{format,documents:['REQ']}}); assert.ok(result.bytes.length > 100); assert.equal(result.bytes.subarray(0,format === 'pdf' ? 5 : 2).toString(),format === 'pdf' ? '%PDF-' : 'PK'); console.log('PASS CONTAINER ' + format + ' · ' + result.bytes.length + ' bytes'); }
   console.log('PASS CONTAINER usuário sem root, filesystem readonly, rede externa ausente, saúde 200, prontidão 503 sem configuração e segredos fora da imagem.');
 })().catch(error => { console.error(error.message); process.exitCode = 1; });`;

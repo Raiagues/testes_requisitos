@@ -66,6 +66,7 @@ test('campos e salvamento autenticado com transporte simulado, conflito preserva
   let conflict = false;
   await page.route('**/api/bootstrap',route => route.fulfill({json:{csrfToken:'synthetic',configured:true,user:{id:saved.owner_id,email:'test@example.invalid'},entitlements:{tier:'essential',limits:{projects:1,requirements:50,verifications:20,generations:0},generationsUsed:0},offer:null}}));
   await page.route('**/api/projects',route => route.fulfill({json:[saved]}));
+  await page.route('**/api/account',route => route.fulfill({json:{profile:{id:saved.owner_id,name:'Teste',version:1,avatarVersion:0},roles:[{projectId:saved.id,projectName:saved.name,role:'owner'}]}}));
   await page.route('**/api/projects/' + saved.id,async route => { if (route.request().method() === 'PUT') { if (conflict) { await route.fulfill({status:409,json:{error:'version_conflict'}}); return; } saved = {...saved,payload:route.request().postDataJSON().payload,version:saved.version + 1}; } await route.fulfill({json:saved}); });
   await page.goto('/'); await page.locator('#account-button').click(); await page.getByRole('button',{name:'Abrir',exact:true}).click(); await page.locator('#add-req-button').click(); await page.locator('#eng-new-requirement [name=text]').fill('O sistema deve registrar α ≤ 3 °C.'); await page.locator('#eng-new-requirement button[type=submit]').click();
   await expect.poll(() => saved.payload.requirements.length).toBe(1);

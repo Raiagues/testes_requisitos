@@ -8,6 +8,7 @@ module.exports = function authRoutes(app,h) {
     if (!config.authEmailReady) { throw new AppError('auth_email_unavailable',503); }
     const result = await gateway.fresh().auth.signUp({...input,options:{emailRedirectTo:config.siteUrl + '/auth/confirm'}});
     if (result.error && result.error.code !== 'user_already_exists') { throw new AppError('auth_email_unavailable',503); }
+    if (!result.error && result.data?.user?.id) { check(await gateway.service.rpc('norte_register_signup',{p_user:result.data.user.id})); }
     await audit(req,'signup_requested'); res.json({message:'Se o endereço puder ser cadastrado, você receberá a confirmação por e-mail.'});
   });
   app.post('/api/auth/login',async (req,res) => {

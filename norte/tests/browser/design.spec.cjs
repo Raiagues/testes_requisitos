@@ -9,7 +9,8 @@ test('clicar em entrar antes do bootstrap aguarda a conta sem mostrar configura�
   let release; const ready = new Promise(resolve => { release = resolve; });
   await page.route('**/api/bootstrap',async route => { await ready; await route.fulfill({json:{csrfToken:'synthetic',configured:true,authEmailReady:true,user:{id:'00000000-0000-4000-8000-000000000001'},entitlements:{tier:'essential',limits:{projects:1,requirements:50,verifications:20,generations:0},generationsUsed:0}}}); });
   await page.route('**/api/projects',route => route.fulfill({json:[]}));
-  try { await page.goto('/'); await page.locator('#account-button').click(); await expect(page.locator('#account-page')).toBeHidden(); release(); await expect(page.getByRole('heading',{name:'Meus projetos',exact:true})).toBeVisible(); await expect(page.locator('#account-page')).not.toContainText('aguardando configuração'); } finally { release(); }
+  await page.route('**/api/account',route => route.fulfill({json:{profile:{id:'00000000-0000-4000-8000-000000000001',name:'Teste',version:1,avatarVersion:0},roles:[]}}));
+  try { await page.goto('/'); await page.locator('#account-button').click(); await expect(page.locator('#account-page')).toBeHidden(); release(); await expect(page.getByRole('heading',{name:'Meu perfil',exact:true})).toBeVisible(); await expect(page.locator('#account-page')).not.toContainText('aguardando configuração'); } finally { release(); }
 });
 test('preços abertos antes do bootstrap carregam sem exigir nova seleção',async ({page}) => {
   let release; const ready = new Promise(resolve => { release = resolve; });

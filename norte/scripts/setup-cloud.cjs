@@ -46,6 +46,7 @@ async function main(mode = process.argv[2] || 'plan', env = process.env) {
   const config = readConfig({...env,NODE_ENV:'production',SITE_URL:siteUrl});
   if (!configured(config) || !config.serviceOwner || !config.privacyContact) { throw new Error('Configuração local incompleta.'); }
   const values = {NODE_ENV:'production',SITE_URL:siteUrl,SESSION_ENCRYPTION_KEY:config.sessionKey,SUPABASE_URL:config.supabaseUrl,SUPABASE_PUBLISHABLE_KEY:config.publishableKey,SUPABASE_SECRET_KEY:config.secretKey,SERVICE_OWNER:config.serviceOwner,PRIVACY_CONTACT:config.privacyContact,REQUIREMENTS_AI_PROVIDER:'none',GEMINI_HELP_APPROVED:'false',REQUIREMENTS_AI_APPROVED:'false',...publicHelpSettings(config)};
+  values.PROTOTYPE_ADMIN_ENABLED=String(config.prototypeAdmin);
   console.log(JSON.stringify({mode,service:service.name,siteUrl,project:project.id,plan:'free',variableNames:Object.keys(values)}));
   if (mode === 'plan') { return; }
   if (mode === 'rotate-key') {

@@ -74,6 +74,8 @@ function createApp({config = readConfig(),gateway = createGateway(config),fetche
   require('./routes-auth.cjs')(app,helpers);
   require('./routes-project.cjs')(app,helpers);
   require('./routes-team.cjs')(app,helpers);
+  require('./routes-account.cjs')(app,helpers);
+  require('./routes-plans.cjs')(app,helpers);
   require('./routes-business.cjs')(app,helpers);
   app.use('/assets',express.static(path.join(root,'dist','assets'),{dotfiles:'deny',index:false,maxAge:3600000,fallthrough:false}));
   app.get(['/','/index.html','/auth/confirm'],(_req,res) => res.sendFile(path.join(root,'dist','index.html')));

@@ -41,6 +41,7 @@ async function run() {
       await migrate(client); await migrate(client);
       const {runDatabaseTests} = require('../tests/database.cjs'); await runDatabaseTests(client,connection);
       const {runTeamTests} = require('../tests/team-database.cjs'); await runTeamTests(client,connection);
+      const {runAccountTests} = require('../tests/account-database.cjs'); await runAccountTests(client,connection);
       const {testRestore} = require('../tests/restore.cjs'); await testRestore(client,connection,bootstrap);
     } finally { await client.end(); }
     console.log('PostgreSQL local: migrações idempotentes e testes de permissões concluídos. Auth/Storage são contratos locais, não serviços Supabase hospedados.');

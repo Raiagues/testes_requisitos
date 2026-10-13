@@ -1,0 +1,21 @@
+const {z,uuid} = require('./schemas.cjs');
+const {check,AppError} = require('./errors.cjs');
+const {normalizeAvatar} = require('./avatars.cjs');
+const profile = z.strictObject({name:z.string().trim().min(2).max(100),company:z.string().trim().max(120),jobTitle:z.string().trim().max(100),discipline:z.string().trim().max(100),bio:z.string().trim().max(500)});
+const conversation = z.strictObject({projectId:uuid.nullable().default(null),documentId:z.string().max(60).default(''),supportUser:uuid.nullable().default(null)}).refine(value => Boolean(value.projectId)!==Boolean(value.supportUser));
+module.exports = function accountRoutes(app,h) {
+  const {authenticated,limited,gateway,admin,config} = h;
+  app.get('/api/account',authenticated,async (req,res) => res.json(check(await req.auth.db.rpc('norte_account_profile'))));
+  app.put('/api/account',authenticated,async (req,res) => { const input=z.strictObject({version:z.number().int().positive(),profile}).parse(req.body); await limited(req,'profile',30); res.json(check(await req.auth.db.rpc('norte_account_profile',{p_input:input.profile,p_version:input.version}))); });
+  app.post('/api/account/presence',authenticated,async (req,res) => { z.strictObject({}).parse(req.body); await limited(req,'account-presence',12,60); check(await req.auth.db.rpc('norte_account_presence')); res.json({ok:true}); });
+  app.put('/api/account/avatar',authenticated,async (req,res) => { const input=z.strictObject({version:z.number().int().nonnegative(),bytes:z.string().max(2800000).nullable()}).parse(req.body); await limited(req,'avatar',8); const bytes=input.bytes===null ? null : await normalizeAvatar(input.bytes); const version=check(await gateway.service.rpc('norte_avatar_write',{p_user:req.auth.user.id,p_bytes:bytes,p_version:input.version})); res.json({version}); });
+  app.get('/api/people/:id/avatar',authenticated,async (req,res) => { uuid.parse(req.params.id); const bytes=check(await req.auth.db.rpc('norte_avatar_read',{p_user:req.params.id})); if (!bytes) { throw new AppError('not_found',404); } res.type('image/webp').set('Content-Disposition','inline; filename="avatar.webp"').send(Buffer.from(bytes,'base64')); });
+  async function observer(req) { if (!config.prototypeAdmin) { throw new AppError('not_found',404); } await admin(req); }
+  app.get('/api/admin/people',async (req,res) => { await observer(req); await limited(req,'observer-list',120); const input=z.strictObject({q:z.string().max(100).default(''),offset:z.coerce.number().int().min(0).max(100000).default(0)}).parse(req.query); res.json(check(await req.auth.db.rpc('norte_prototype_overview',{p_query:input.q,p_offset:input.offset}))); });
+  app.get('/api/admin/people/:id',async (req,res) => { await observer(req); uuid.parse(req.params.id); res.json(check(await req.auth.db.rpc('norte_prototype_user',{p_user:req.params.id}))); });
+  app.get('/api/admin/inspect/:id',async (req,res) => { await observer(req); uuid.parse(req.params.id); await limited(req,'observer-project',60); res.json(check(await req.auth.db.rpc('norte_prototype_project',{p_id:req.params.id}))); });
+  app.get('/api/admin/inbox',async (req,res) => { await observer(req); res.json(check(await req.auth.db.rpc('norte_support_inbox'))); });
+  async function channel(req,raw) { const c=conversation.parse(raw); if (c.supportUser && c.supportUser!==req.auth.user.id) { await observer(req); } return {p_project:c.projectId,p_document:c.documentId,p_support:c.supportUser}; }
+  app.post('/api/messages/read',authenticated,async (req,res) => { const input=z.strictObject({channel:conversation,after:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER).default(0)}).parse(req.body); const args=await channel(req,input.channel); await limited(req,'message-read',60,60); res.json(check(await req.auth.db.rpc('norte_messages',{...args,p_after:input.after}))); });
+  app.post('/api/messages',authenticated,async (req,res) => { const input=z.strictObject({channel:conversation,key:uuid,body:z.string().trim().min(1).max(2000)}).parse(req.body); const args=await channel(req,input.channel); await limited(req,'message-send',30,60); res.status(201).json(check(await req.auth.db.rpc('norte_message_send',{...args,p_key:input.key,p_body:input.body}))); });
+};

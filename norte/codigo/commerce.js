@@ -3,15 +3,15 @@ let commercialToken = '';
 let commercialTimer;
 let commercialKey = '';
 let commercialRevision = 0;
-OFFER.services.none = {name:'Sem serviço avulso',price:0,delivery:'Somente software selecionado'};
+// Novas assinaturas usam a contratação individual/empresa da conta.
 const originalNormalizePlan = normalizePlan;
 normalizePlan = function(input = {}) { return {...originalNormalizePlan(input),subscription:input.subscription === true}; };
 function commercialSelection() { const p = normalizePlan(quotePlan); return {subscription:p.subscription,service:p.service,volume:p.volume,reviewer:p.reviewer,area:p.area,hosting:p.hosting,addons:p.addons,standards:p.standards}; }
 function cents(value) { return (value / 100).toLocaleString('pt-BR',{style:'currency',currency:'BRL'}); }
 const commercialFields = renderPlanFields;
 renderPlanFields = function() {
-  commercialFields();
-  if (quotePlan.mode !== 'test') { el('plan-fields').querySelector('.n-first-order')?.remove(); const label = el('plan-fields').querySelector('.n-discount-label'); if (label) { label.textContent = 'Campanha na parcela elegível'; } el('plan-fields').insertAdjacentHTML('afterbegin',`<label class="n-check"><input type="checkbox" data-choice="subscription" ${quotePlan.subscription ? 'checked' : ''}><span>Software Profissional<small>Assinatura separada dos serviços e da revisão humana. Disponibilidade após validação operacional.</small></span></label>`); }
+  quotePlan.subscription=false; if (quotePlan.service==='none') { quotePlan.service='analysis'; } commercialFields();
+  if (quotePlan.mode !== 'test') { el('plan-fields').querySelector('.n-first-order')?.remove(); const label = el('plan-fields').querySelector('.n-discount-label'); if (label) { label.textContent = 'Campanha na parcela elegível'; } el('plan-fields').insertAdjacentHTML('afterbegin',`<div class="service-plan-link"><div><strong>Procurando o software?</strong><p>Planos individuais e para empresas são contratados separadamente.</p></div><button class="text-button" data-account="nav" data-section="plans">Ver planos ${icon('arrow')}</button></div>`); }
 };
 renderPrice = function() {
   const revision = ++commercialRevision;
