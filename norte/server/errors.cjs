@@ -4,4 +4,5 @@ function check(result) {
   if (result.error) { const code = known.has(result.error.message) ? result.error.message : 'operation_unavailable'; const status = /conflict/.test(code) ? 409 : code === 'not_found' ? 404 : /limit/.test(code) ? 429 : 403; throw new AppError(code,status); }
   return result.data;
 }
+for (const code of ['invalid_grant','invitation_unavailable','team_limit','change_limit','review_required','review_not_authorized','document_removed']) { known.add(code); }
 module.exports = {AppError, check};

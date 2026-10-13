@@ -32,7 +32,7 @@ async function processJob(gateway,job,renderer = renderIsolated) {
     const active = await gateway.rpc('norte_job_bytes',{p_id:job.id,p_lease:job.lease_token,p_bytes:result.bytes.length});
     if (!active) { throw new Error('lease_expired'); }
     storagePath = `${job.user_id}/${job.project_id}/${job.id}/${job.lease_token}`;
-    check(await gateway.service.storage.from('norte-projects').upload(storagePath,result.bytes,{contentType:result.mime,upsert:false}));
+    check(await gateway.service.storage.from('norte-projects').upload(storagePath,result.bytes,{contentType:result.mime,cacheControl:'0',upsert:false}));
     const args = {p_job:job.id,p_lease:job.lease_token,p_ok:true,p_path:storagePath,p_filename:result.filename,p_mime:result.mime,p_sha:hash(result.bytes)};
     const published = await gateway.rpc('norte_finish_job',args);
     if (!published) { await gateway.service.storage.from('norte-projects').remove([storagePath]); }

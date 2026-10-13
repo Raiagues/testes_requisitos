@@ -8,15 +8,23 @@ const JOB_COLUMNS = 'id,project_id,project_version,input,status,cost,filename,mi
 module.exports = function projectRoutes(app,h) {
   const {gateway,config,limited,authenticated,optionalSession,audit,getProject,templates,fetcher} = h;
   const sendBytes = (...args) => require('./app.cjs').sendBytes(...args);
-  app.get('/api/projects',authenticated,async (req,res) => res.json(check(await req.auth.db.from('norte_projects').select('id,name,profile,phase,project_type,start_date,archived,version,updated_at,owner_id').is('deleted_at',null).order('updated_at',{ascending:false}))));
+  app.get('/api/projects',authenticated,async (req,res) => res.json(check(await req.auth.db.rpc('norte_project_list'))));
   app.post('/api/projects',authenticated,async (req,res) => {
     const input = schema.createProject.parse(req.body); await limited(req,'project-write',60);
     const engineering = input.template === 'aurora' ? {...templates.engineering,profile:input.profile,start:input.start} : {profile:input.profile,start:input.start,customDocs:[],schedules:{},prepDays:10,closeDays:7,changes:[],version:1};
     const payload = {requirements:input.template === 'aurora' ? templates.requirements : [],verifications:input.template === 'aurora' ? templates.verifications : [],engineering,settings:{standard:input.profile,quality:true,trace:true,verification:true,anatel:false,itar:false},lifecycle:{durations:{}}};
     const args = {p_name:input.name,p_type:input.type,p_profile:input.profile,p_start:input.start,p_payload:payload};
-    res.status(201).json(check(await req.auth.db.rpc('norte_create_project',args)));
+    const created = check(await req.auth.db.rpc('norte_create_project',args)); res.status(201).json(await getProject(req,created.id));
   });
-  app.get('/api/projects/:id',authenticated,async (req,res) => res.json(await getProject(req)));
+  app.get('/api/projects/:id',authenticated,async (req,res) => {
+    const project = await getProject(req);
+    if (project.access?.scope === 'project' && ['owner','editor'].includes(project.access.role)) {
+      const changes = check(await req.auth.db.rpc('norte_changes',{p_id:project.id}));
+      const working = changes.find(c => c.authorId === req.auth.user.id && !c.documentId && ['draft','open','changes_requested'].includes(c.status));
+      if (working) { project.workingCopy = check(await req.auth.db.rpc('norte_changes',{p_id:project.id,p_change:working.id})); }
+    }
+    res.json(project);
+  });
   app.put('/api/projects/:id',authenticated,async (req,res) => {
     const input = schema.z.strictObject({version:schema.z.number().int().positive(),payload:schema.payload}).parse(req.body); schema.uuid.parse(req.params.id); await limited(req,'project-write',240);
     res.json(check(await req.auth.db.rpc('norte_save_project',{p_id:req.params.id,p_version:input.version,p_payload:input.payload})));
@@ -27,7 +35,7 @@ module.exports = function projectRoutes(app,h) {
   });
   app.post('/api/projects/:id/choose',authenticated,async (req,res) => { schema.z.strictObject({}).parse(req.body); schema.uuid.parse(req.params.id); res.json(check(await req.auth.db.rpc('norte_choose_project',{p_id:req.params.id}))); });
   app.post('/api/trial',authenticated,async (req,res) => { schema.z.strictObject({}).parse(req.body); res.json(check(await req.auth.db.rpc('norte_activate_trial'))); });
-  app.get('/api/projects/:id/export',authenticated,async (req,res) => { const project = await getProject(req); await audit(req,'project_export','ok',project.id); res.attachment('norte-projeto.json').json({schemaVersion:1,project}); });
+  app.get('/api/projects/:id/export',authenticated,async (req,res) => { const project = await getProject(req); if (project.access?.scope === 'documents') { throw new AppError('not_found',404); } await audit(req,'project_export','ok',project.id); res.attachment('norte-projeto.json').json({schemaVersion:1,project}); });
   app.get('/api/projects/:id/versions',authenticated,async (req,res) => { await getProject(req); const e = check(await req.auth.db.rpc('norte_entitlements')); if (e.tier === 'essential') { throw new AppError('advanced_required',403); } res.json(check(await req.auth.db.from('norte_versions').select('version,payload,created_at').eq('project_id',req.params.id).order('version',{ascending:false}).limit(30))); });
   app.get('/api/projects/:id/sources',authenticated,async (req,res) => { await getProject(req); res.json(check(await req.auth.db.from('norte_source_adoptions').select('*').eq('project_id',req.params.id))); });
   app.post('/api/projects/:id/sources',authenticated,async (req,res) => { const input = schema.z.strictObject({sourceId:schema.id,decision:schema.z.enum(['confirmed','pending','not_applicable']),rationale:schema.z.string().min(1).max(4000),responsible:schema.short,version:schema.z.number().int().positive()}).parse(req.body); schema.uuid.parse(req.params.id); res.json(check(await req.auth.db.rpc('norte_adopt_source',{p_project:req.params.id,p_source:input.sourceId,p_decision:input.decision,p_rationale:input.rationale,p_responsible:input.responsible,p_version:input.version}))); });
@@ -46,8 +54,10 @@ module.exports = function projectRoutes(app,h) {
     const job = check(await req.auth.db.from('norte_jobs').select(JOB_COLUMNS).eq('id',req.params.id).eq('status','ready').maybeSingle());
     if (!job) { throw new AppError('not_found',404); }
     const internal = check(await gateway.service.from('norte_jobs').select('storage_path').eq('id',job.id).single());
-    const file = check(await req.auth.db.storage.from('norte-projects').download(internal.storage_path));
-    if (!check(await req.auth.db.rpc('norte_can_read',{p_id:job.project_id}))) { throw new AppError('not_found',404); }
+    // A consulta acima usa o JWT e a RLS da tarefa; somente este caminho interno
+    // pode ser lido pelo servidor. Storage direto e URLs assinadas são negados.
+    const file = check(await gateway.service.storage.from('norte-projects').download(internal.storage_path));
+    if (!check(await req.auth.db.rpc('norte_job_allowed',{p_job:job.id}))) { throw new AppError('not_found',404); }
     const bytes = Buffer.from(await file.arrayBuffer()); if (hash(bytes) !== job.sha256) { throw new AppError('file_integrity_failed',503); }
     await audit(req,'document_download','ok',job.project_id); sendBytes(req,res,bytes,job.mime,job.filename);
   });

@@ -16,9 +16,9 @@ function fakeGateway() {
     const filters = []; let single = false;
     const q = {select(){ return q; },eq(key,value){ filters.push([key,value]); return q; },in(){ return q; },is(){ return q; },order(){ return q; },limit(){ return q; },maybeSingle(){ single = true; return q; },single(){ single = true; return q; },insert(value){ actions.push({table,value}); return q; },update(value){ actions.push({table,value}); return q; },then(resolve){ if (privileged) { serviceReads.push(table); } let rows = table === 'norte_config' ? [currentOffer] : table === 'norte_controls' ? [{ai_enabled:true,generation_enabled:true}] : table === 'norte_projects' ? [project] : table === 'norte_source_adoptions' ? [{source_id:'SOURCE-1'}] : table === 'norte_sources' ? [{id:'SOURCE-1'}] : table === 'norte_citations' ? [{id:'CIT-1',source_id:'SOURCE-1',clause:'C.4',page_index:0,exact_text:'One thought.'}] : []; rows = rows.filter(row => filters.every(([key,value]) => row[key] === undefined || row[key] === value)); return Promise.resolve({data:single ? rows[0] || null : rows,error:null}).then(resolve); }}; return q;
   }
-  const db = {from:table => query(table),rpc:async name => ({data:name === 'norte_is_admin' ? false : name === 'norte_can_read' ? false : {tier:'essential',limits:{}},error:null})};
+  const db = {from:table => query(table),rpc:async (name,args) => ({data:name === 'norte_project_context' ? (args.p_id === A ? project : null) : name === 'norte_is_admin' ? false : name === 'norte_can_read' ? false : {tier:'essential',limits:{}},error:null})};
   const gateway = {fresh:() => ({from:table => query(table),auth:{signInWithPassword:async () => ({data:{session:{access_token:'synthetic-token',refresh_token:'synthetic-refresh'},user:{id:A,email_confirmed_at:'now'}},error:null})}}),service:{from:table => query(table,true),rpc:async (name,args) => { actions.push({name,args}); return {data:[],error:null}; }},rate:async (key) => { sent.push(key); return true; },audit:async () => {},resolveSession:async id => { if (id !== 'synthetic-session') { throw new AppError('not_authenticated',401); } return {id,user:{id:A,email:'synthetic@example.invalid'},tokens:{access_token:'synthetic-token'},db,authClient:{auth:{getClaims:async () => ({data:{claims:{aal:'aal1'}}})}}}; },saveSession:async () => 'synthetic-session',rpc:async name => { if (name === 'norte_ai_slot') { return A; } actions.push({name}); return null; }};
-  return {gateway,actions,sent,serviceReads};
+  return {gateway,actions,sent,serviceReads,db};
 }
 async function bootstrap(app) { const agent = request.agent(app); const init = await agent.get('/api/bootstrap'); return {agent,token:init.body.csrfToken}; }
 test('página publica URLs versionadas pelo conteúdo para atualizar CSS e scripts no navegador',async () => {
@@ -54,4 +54,32 @@ test('e-mail não configurado ou falha de SMTP não finge enviar confirmação; 
     assert.equal(providerCalls,ready ? 2 : 0);
     assert.equal((await agent.post('/api/auth/login').set(headers).send({email:'fixture@example.invalid',password:'synthetic-password'})).status,200);
   }
+});
+test('equipe rejeita aprovação, cargo, preço e comandos forjados antes de chamar o banco',async () => {
+  const fake = fakeGateway(); const calls = []; fake.db.rpc = async (name,args) => { calls.push({name,args}); return {data:null,error:null}; };
+  const app=createApp({config,gateway:fake.gateway}); const {agent,token}=await bootstrap(app); calls.length=0;
+  const headers={Cookie:'norte-session=synthetic-session',Origin:config.siteUrl,'X-CSRF-Token':token};
+  const url='/api/projects/'+A;
+  const cases=[
+    ['post',url+'/team',{action:'invite',version:1,email:'person@example.invalid',role:'owner',scope:'project',documents:{},expires:new Date(Date.now()+86400000).toISOString()}],
+    ['post',url+'/team',{action:'protection',version:1,required:false,role:'admin'}],
+    ['post',url+'/changes/'+B,{action:'merge',revision:1,approved:true,reviewerId:A}],
+    ['post',url+'/changes/'+B,{action:'review',revision:1,decision:'approve',authorId:B,tools:['shell']}],
+    ['put',url+'/draft',{changeId:null,revision:0,version:1,documentId:'EMP-A',payload:{body:'Texto legítimo',price:0,permissions:'all'}}]
+  ];
+  for(const [method,path,body] of cases) { const result=await agent[method](path).set(headers).send(body); assert.equal(result.status,422,path); }
+  assert.deepEqual(calls,[]); assert.deepEqual(fake.actions,[]);
+});
+test('rebase preserva edições ainda não salvas, exige escolhas de conflito e versão exata',async () => {
+  const base={requirements:[{id:'REQ-1',version:1,text:'Original'}],verifications:[],engineering:{profile:'NASA',customDocs:[],schedules:{}},settings:{},lifecycle:{durations:{}}};
+  const current=structuredClone(base); current.requirements[0].text='Outra alteração';
+  const pending=structuredClone(base); pending.requirements[0].text='Meu texto ainda não salvo';
+  const change={id:B,authorId:A,projectId:A,baseVersion:1,revision:3,before:base,after:base,documentId:null}; let saved;
+  const fake=fakeGateway(); fake.db.rpc=async(name,args)=>({data:name==='norte_project_context'?{id:A,version:2,payload:current}:name==='norte_changes'?change:name==='norte_change_save'?(saved=args,{...change,after:args.p_payload,revision:4}):null,error:null});
+  const app=createApp({config,gateway:fake.gateway}); const {agent,token}=await bootstrap(app); const headers={Cookie:'norte-session=synthetic-session',Origin:config.siteUrl,'X-CSRF-Token':token};
+  const url='/api/projects/'+A+'/changes/'+B+'/rebase';
+  const conflict=await agent.post(url).set(headers).send({revision:3,version:2,pending}); assert.equal(conflict.status,200); assert.equal(conflict.body.merged,false); assert.equal(conflict.body.conflicts[0].mine,'Meu texto ainda não salvo'); assert.equal(saved,undefined);
+  const done=await agent.post(url).set(headers).send({revision:3,version:2,pending,resolutions:[{path:'/requirements/REQ-1/text',choice:'mine'}]}); assert.equal(done.status,200); assert.equal(done.body.merged,true); assert.equal(saved.p_payload.requirements[0].text,pending.requirements[0].text); assert.equal(saved.p_version,2);
+  saved=undefined; const stale=await agent.post(url).set(headers).send({revision:2,version:2,pending}); assert.equal(stale.status,409); assert.equal(saved,undefined);
+  const forged=await agent.post(url).set(headers).send({revision:3,version:2,pending:{...pending,role:'admin'}}); assert.equal(forged.status,422); assert.equal(saved,undefined);
 });

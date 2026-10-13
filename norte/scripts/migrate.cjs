@@ -17,6 +17,7 @@ async function migrate(client) {
     try { await client.query(sql); await client.query('insert into public.norte_migrations(name,sha256) values($1,$2)',[name,digest]); await client.query('commit'); console.log('Aplicada: ' + name); }
     catch (error) { await client.query('rollback'); throw error; }
   }
+  await client.query("select pg_notify('pgrst','reload schema')");
 }
 async function main() {
   const client = new Client(databaseOptions(process.env.MIGRATION_DATABASE_URL));

@@ -6,7 +6,7 @@ const root = path.resolve(__dirname,'..');
 const code = path.join(root,'codigo');
 const output = path.join(root,'dist');
 fs.mkdirSync(path.join(output,'assets'),{recursive:true});
-const files = {DATA:'data.js',CATALOGUE:'catalogue.js',PRICING:'pricing.js',PDF:'pdf.js',APP:'app.js',LANDING_JS:'landing.js',ENGINEERING_DATA:'engineering-data.js',ENGINEERING_EXPORT:'engineering-export.js',ENGINEERING_APP:'engineering.js',LIFECYCLE_APP:'lifecycle.js',PLATFORM:'platform.js',PDF_VIEWER:'pdf-viewer.js',COMMERCE:'commerce.js'};
+const files = {DATA:'data.js',CATALOGUE:'catalogue.js',PRICING:'pricing.js',PDF:'pdf.js',APP:'app.js',LANDING_JS:'landing.js',ENGINEERING_DATA:'engineering-data.js',ENGINEERING_EXPORT:'engineering-export.js',ENGINEERING_APP:'engineering.js',LIFECYCLE_APP:'lifecycle.js',PLATFORM:'platform.js',TEAM:'team.js',PDF_VIEWER:'pdf-viewer.js',COMMERCE:'commerce.js'};
 let html = fs.readFileSync(path.join(code,'index.template.html'),'utf8');
 function assetUrl(name,content) { return '/assets/' + name + '?v=' + crypto.createHash('sha256').update(content).digest('hex').slice(0,12); }
 for (const [marker,file] of Object.entries(files)) {

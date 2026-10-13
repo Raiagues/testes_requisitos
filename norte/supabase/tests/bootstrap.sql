@@ -4,6 +4,9 @@ create role authenticated nologin;
 create role service_role nologin bypassrls;
 create schema auth;
 create schema storage;
+-- Contrato do Supabase Storage; contexto preenchido pelo HTTP no serviço real.
+create function storage.operation() returns text language sql stable as $$ select current_setting('storage.operation',true) $$;
+create function storage.allow_only_operation(expected_operation text) returns boolean language sql stable as $$ select coalesce(expected_operation<>'' and regexp_replace(storage.operation(),'^storage\.','')=regexp_replace(expected_operation,'^storage\.',''),false) $$;
 create table auth.users(id uuid primary key,email text,email_confirmed_at timestamptz,banned_until timestamptz,raw_user_meta_data jsonb default '{}');
 create function auth.jwt() returns jsonb language sql stable as $$ select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb $$;
 create function auth.uid() returns uuid language sql stable as $$ select (auth.jwt()->>'sub')::uuid $$;

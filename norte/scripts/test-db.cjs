@@ -40,6 +40,7 @@ async function run() {
       const bootstrap = fs.readFileSync(path.join(__dirname,'..','supabase','tests','bootstrap.sql'),'utf8'); await client.query(bootstrap);
       await migrate(client); await migrate(client);
       const {runDatabaseTests} = require('../tests/database.cjs'); await runDatabaseTests(client,connection);
+      const {runTeamTests} = require('../tests/team-database.cjs'); await runTeamTests(client,connection);
       const {testRestore} = require('../tests/restore.cjs'); await testRestore(client,connection,bootstrap);
     } finally { await client.end(); }
     console.log('PostgreSQL local: migrações idempotentes e testes de permissões concluídos. Auth/Storage são contratos locais, não serviços Supabase hospedados.');

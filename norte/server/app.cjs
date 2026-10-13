@@ -39,7 +39,7 @@ function createApp({config = readConfig(),gateway = createGateway(config),fetche
   async function audit(req,event,result = 'ok',projectId = null) { if (gateway) { await gateway.audit(req.auth?.user.id,projectId,event,result,req.requestId).catch(() => {}); } }
   async function getProject(req,id = req.params.id) {
     schema.uuid.parse(id);
-    const project = check(await req.auth.db.from('norte_projects').select('*').eq('id',id).maybeSingle());
+    const project = check(await req.auth.db.rpc('norte_project_context',{p_id:id}));
     if (!project) { throw new AppError('not_found',404); } return project;
   }
   async function admin(req,role) {
@@ -73,6 +73,7 @@ function createApp({config = readConfig(),gateway = createGateway(config),fetche
   const helpers = {config,gateway,fetcher,templates,session,authenticated,optionalSession,limited,audit,getProject,admin,configuration,eligibility,sessionCookie,seedCookie,cookieOptions};
   require('./routes-auth.cjs')(app,helpers);
   require('./routes-project.cjs')(app,helpers);
+  require('./routes-team.cjs')(app,helpers);
   require('./routes-business.cjs')(app,helpers);
   app.use('/assets',express.static(path.join(root,'dist','assets'),{dotfiles:'deny',index:false,maxAge:3600000,fallthrough:false}));
   app.get(['/','/index.html','/auth/confirm'],(_req,res) => res.sendFile(path.join(root,'dist','index.html')));
