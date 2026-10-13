@@ -2,6 +2,8 @@
 
 Nenhum segredo deve ser colocado em uma conversa, commit ou arquivo público. Os nomes abaixo são os usados pelo código. Não há uma URL Render publicada nesta execução.
 
+O código já está em [Raiagues/testes_requisitos, branch main](https://github.com/Raiagues/testes_requisitos), com [CI aprovada](https://github.com/Raiagues/testes_requisitos/actions/runs/38334850799). Isso é publicação do código, não implantação da aplicação.
+
 ## Para contas, projetos e documentos persistentes
 
 1. Em **Supabase → projeto próprio da Norte → Settings / API Keys**, obtenha a URL, a chave publicável e a chave secreta do servidor. Use ambientes separados para homologação e produção.

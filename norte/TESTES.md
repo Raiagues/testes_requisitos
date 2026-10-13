@@ -13,6 +13,7 @@ Execução local em 12/10/2026. Dados sintéticos; nenhum ataque foi dirigido a 
 | `npm audit` | Nenhuma vulnerabilidade reportada na consulta | Retrato do catálogo consultado, não garantia futura |
 | `npm run scan:secrets` | Nenhum padrão detectado | Scanner por padrões e histórico Git acessível |
 | Docker | Build e smoke test passaram: PDF, DOCX e ZIP, sem root, filesystem readonly, rede externa ausente | Publicação Render depende de conexão e configuração |
+| GitHub Actions | [Execução 38334850799 aprovada](https://github.com/Raiagues/testes_requisitos/actions/runs/38334850799), commit `706dc8c` | 45 testes de aplicação, 28 de banco, restauração e 11 de navegador; original NASA ausente na CI gera um skip explícito |
 
 ## Banco, autorização e recuperação
 
@@ -41,6 +42,8 @@ O handbook NASA foi obtido do endereço oficial autorizado para conferência loc
 PDFs REQ, RTM e CRN foram rasterizados e todas as páginas dos exemplos foram inspecionadas. O cronograma foi corrigido para evitar sobreposição dos rótulos. Teste multipágina com 35 requisitos verifica texto selecionável, Unicode e ausência de páginas vazias. Word tem tabela com cabeçalho repetido e XML escapado; ZIP contém PDF e Word das entregas selecionadas, dados e manifesto. CSV neutraliza fórmulas e ICS escapa/folda linhas.
 
 Evidências locais reproduzíveis: `test-results/`, incluindo `browser-results.json`, capturas, `pdf-visual/`, `pdfs/` e `sources/`. Esses artefatos não são publicados como arquivos oficiais de referência. A CI guarda somente fixtures e capturas sintéticas por sete dias.
+
+A CI também concluiu análise estática, varredura do histórico Git, auditoria npm, build Docker e smoke test da imagem. Os logs completos desta execução estão em `test-results/github-ci-full.log` e no link acima. Commits posteriores restritos à documentação não alteram o código validado e não disparam repetição automática dessa suíte.
 
 ## Ainda não executado com serviços reais
 
