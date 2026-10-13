@@ -47,3 +47,16 @@ npm audit --audit-level=moderate
 ```
 
 O scanner procura padrões em fontes, build e histórico Git acessível; não imprime valores. Ausência de padrões e resultado limpo do catálogo npm não provam ausência universal de segredos/vulnerabilidades. CI usa dependências e Actions fixadas, permissões de leitura e artefatos sintéticos com sete dias de retenção. O teste do original NASA é local e opcional; a CI sem esse arquivo registra skip.
+
+## Homologação externa em 13/10/2026
+
+Separação de evidências:
+
+- **Simulados:** respostas manipuladas do provedor IA e cenários de SSRF/erros do provedor. A saída do modelo continua incapaz de chamar ferramentas, SQL, shell, outros projetos, alterar preços ou aprovações. Nenhuma chamada real ao Gemini foi realizada.
+- **Locais reais:** PostgreSQL efêmero com contratos de Auth/Storage, Chromium e geração PDF/DOCX; o transporte de Storage no teste de restauração continua simulado.
+- **Supabase hospedado real:** `tests/real/hosted.test.cjs` passou com Auth, MFA TOTP, JWT, RLS, RPC, PostgreSQL TLS e Storage privados. BFF inicialmente local. Inclui recuperação, confirmação e uso único de links sem enviar e-mail; isso não valida SMTP. Fixtures removidas (4 usuários, projetos e 1 arquivo); auditoria mantida.
+- **Render:** configuração feita por API após verificar ID, repo, branch, raiz, runtime e plano Free. A evidência do teste sobre o endereço publicado é registrada separadamente em EXECUCAO.md, sem confundir a homologação local com deploy.
+
+Os ensaios encontraram dois defeitos de funcionalidade: mapas de enum do Zod exigiam todos os perfis, e uma sessão removida vinha como objeto SQL com campos nulos. Regressões específicas verificam salvamento de projeto vazio e retorno 401 após revogação. Os schemas continuam estritos para nomes de perfis e demais campos. A correção não libera ações, contas ou envio de e-mail sem configuração.
+
+Migração: CA oficial com fingerprint fixado, validade conferida, `rejectUnauthorized:true` e verificação de hostname. Tests tentam `sslmode=disable`, `no-verify`, substituição de host via query string e cadeias/hosts divergentes. O modo sem TLS só existe para localhost explícito no teste efêmero. Segredos operacionais permanecem fora do repositório, build e imagem. A varredura também cobre padrões de tokens de gestão Supabase/Render.

@@ -1,109 +1,62 @@
-# Configuração que depende do responsável pela Norte
+# Configuração de testes_requisitos
 
-Nenhum segredo deve ser colocado em uma conversa, commit ou arquivo público. Os nomes abaixo são os usados pelo código. Não há uma URL Render publicada nesta execução.
+## Situação atual
 
-Este guia é exclusivo de **Raiagues/testes_requisitos → serviço Render testes-requisitos**. O serviço antigo chamado **norte** pertence a outro protótipo. Use também um projeto Supabase exclusivo de `testes_requisitos`; não substitua as chaves nem execute migrações no banco do outro protótipo.
+Este protótipo usa exclusivamente o serviço Render **testes-requisitos** e o Supabase identificado em `scripts/setup-cloud.cjs`. O outro serviço chamado **norte** não recebe operações desta automação. A pasta `norte/` é apenas o diretório do código.
 
-O código já está em [Raiagues/testes_requisitos, branch main](https://github.com/Raiagues/testes_requisitos), com [CI aprovada](https://github.com/Raiagues/testes_requisitos/actions/runs/38334850799). Isso é publicação do código, não implantação da aplicação.
+As migrações `001` a `008` foram aplicadas no Supabase real e repetidas com sucesso. As variáveis do servidor, responsável e contato foram preenchidos pela API do Render. A origem e os redirecionamentos foram configurados no Supabase. Não é necessário repetir essas etapas no painel. Evidências e estado da publicação: [EXECUCAO.md](EXECUCAO.md) e [TESTES.md](TESTES.md).
 
-## Para contas, projetos e documentos persistentes
+## Único acesso ainda necessário para os e-mails
 
-1. No Supabase, selecione ou crie um projeto exclusivo chamado `testes-requisitos`, no plano gratuito. No botão **Connect**, copie a Project URL; em **Settings → API Keys**, obtenha as chaves Publishable e Secret desse mesmo projeto. Não é necessário girar as chaves do outro Norte. [Localização das chaves](https://supabase.com/docs/guides/getting-started/api-keys#find-your-keys).
-2. Em **Supabase → Connect → Session pooler**, copie a conexão PostgreSQL com TLS e substitua o marcador da senha pela senha desse banco. Coloque-a em `MIGRATION_DATABASE_URL` no arquivo local e ignorado pelo Git `norte/.env`. Execute `npm run migrate` dentro de `norte/`, uma vez para preparar esse banco. Nunca coloque essa conexão no serviço web. As oito migrações já foram executadas e verificadas em PostgreSQL temporário; a aplicação no Supabase hospedado continua dependendo dessa conexão.
-3. No Render, abra o Blueprint ligado a `Raiagues/testes_requisitos` e use **Manual Sync** se ele ainda não carregou o arquivo corrigido. Abra o novo serviço **testes-requisitos**, mantendo o plano **Free**. A definição corrigida não contém o serviço antigo `norte`. Para uma primeira criação, use **New → Blueprint**, branch `main`, arquivo `render.yaml`; não associe um protótipo diferente. Siga [DEPLOY_RENDER.md](DEPLOY_RENDER.md).
-4. Em **Render → testes-requisitos → Environment → Add Environment Variable**, preencha os sete valores:
+No arquivo privado local `norte/.env`, preencher somente `AUTH_SMTP_PASSWORD` com uma **senha de app** da conta Gmail informada como contato da Norte. O campo já está preparado. Não usar a senha normal da conta nem enviar valores pela conversa.
 
-| Nome | Tipo | Valor a obter/configurar |
-| --- | --- | --- |
-| `SITE_URL` | Público | Endereço HTTPS exibido no topo do serviço **testes-requisitos**, sem barra final |
-| `SUPABASE_URL` | Público | Project URL em **Supabase → projeto testes-requisitos → Connect** |
-| `SUPABASE_PUBLISHABLE_KEY` | Publicável | Chave publicável daquele projeto; RLS continua obrigatório |
-| `SUPABASE_SECRET_KEY` | Segredo | Chave administrativa, exclusivamente no servidor |
-| `SESSION_ENCRYPTION_KEY` | Segredo | 32 bytes aleatórios em 64 caracteres hexadecimais; gerar localmente com `openssl rand -hex 32` |
-| `SERVICE_OWNER` | Público | Nome real do responsável pelo serviço |
-| `PRIVACY_CONTACT` | Público | Canal real para privacidade e pedidos sobre dados |
+1. Entrar na conta Google correspondente e abrir [Senhas de app](https://myaccount.google.com/apppasswords).
+2. Ativar a verificação em duas etapas se o Google exigir; criar uma senha de app chamada Norte.
+3. Colocar as 16 letras em `AUTH_SMTP_PASSWORD=` e avisar que terminou. A automação configura remetente, host, porta, templates e variáveis do serviço.
 
-`NODE_ENV=production` já consta no Blueprint. `PORT` é fornecida pelo Render. Ausência de configuração impede operações protegidas; a exploração pública do Aurora continua disponível. A oferta comercial também exige responsável e contato preenchidos.
+A disponibilidade de senhas de app depende das políticas da conta Google. Se não houver essa opção, será necessária uma credencial de outro provedor SMTP; não se contratou serviço pago. [Orientação do Google](https://support.google.com/accounts/answer/185833?hl=pt-BR).
 
-Gere o valor de `SESSION_ENCRYPTION_KEY` no terminal com `openssl rand -hex 32` e copie a saída somente para o Environment desse serviço. Depois de preencher todos os valores, clique em **Save, rebuild, and deploy**. Não use o botão de geração automática de segredo do Render para este campo: a aplicação exige o formato hexadecimal acima.
+O Supabase recusou, por API, a edição dos templates enquanto o projeto Free usa o provedor padrão. Esse provedor também restringe destinatários à equipe da organização. Cadastro e recuperação ficam explicitamente indisponíveis enquanto SMTP e templates não estiverem configurados; login de contas já confirmadas continua disponível. Não se desliga a confirmação de e-mail para contornar a limitação. [Limites oficiais de SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
 
-Nesta máquina, a chave de sessão já foi gerada em `norte/.env`, arquivo privado ignorado pelo Git. Copie somente o valor de `SESSION_ENCRYPTION_KEY` desse arquivo para o campo correspondente do Render; não é necessário gerar outra chave. `MIGRATION_DATABASE_URL` continua em branco para ser preenchida com a conexão do Supabase exclusivo deste protótipo.
+Depois de configurado, é preciso confirmar a chegada de uma mensagem na caixa de destino. Validar tokens de confirmação pela API não comprova entrega SMTP.
 
-O arquivo `norte/.env` precisa conter somente a conexão para essa etapa de migração:
+## Operação automatizada
 
-```dotenv
-MIGRATION_DATABASE_URL="COLE_A_CONEXAO_SESSION_POOLER_DE_TESTES_REQUISITOS"
-```
-
-No computador que contém este repositório, execute:
+Com os acessos já presentes apenas no `.env` local, os comandos abaixo são para manutenção, não etapas adicionais a cargo da usuária:
 
 ```bash
-cd /home/rodriger/Documents/testes_requisitos/norte
+cd norte
+npm run setup:cloud -- plan
 npm run migrate
+npm run setup:cloud -- apply
 ```
 
-Após o deploy, abra o endereço real do novo serviço seguido de `/api/ready`. A resposta `{"ready":true}` confirma configuração básica e acesso à tabela de configuração do banco; não substitui o teste de cadastro, confirmação de e-mail e salvamento. Nenhuma URL do protótipo antigo é necessária para configurar este.
+`plan` confere nome, ID, repositório, branch, raiz, Docker, plano Free e projeto Supabase antes de qualquer alteração. `apply` atualiza somente as variáveis necessárias, preserva as demais, mantém confirmação e senha mínima de 12 caracteres e aplica templates quando houver SMTP próprio. O SMTP é usado pelo Supabase, não por conexões SMTP do Render gratuito. O Gmail é uma opção para avaliação sujeita aos limites da conta, não uma garantia de operação de alto volume.
 
-## E-mail de cadastro e recuperação
+| Variáveis | Local e tratamento |
+| --- | --- |
+| `SITE_URL`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY` | Render; origem e identificadores públicos, preenchidos automaticamente |
+| `SERVICE_OWNER`, `PRIVACY_CONTACT` | Render; identificação fornecida pela usuária, preenchida automaticamente |
+| `SESSION_ENCRYPTION_KEY`, `SUPABASE_SECRET_KEY` | Segredos do Render; preenchidos automaticamente, nunca no build |
+| `AUTH_EMAIL_READY` | Render; controlado pela automação após configuração SMTP e templates |
+| `MIGRATION_DATABASE_URL` | Somente `.env` operacional; já preenchida e validada com TLS |
+| `SUPABASE_ACCESS_TOKEN`, `RENDER_API_KEY` | Somente `.env` operacional; não enviados ao serviço web |
+| `AUTH_SMTP_PASSWORD` | Somente `.env` operacional e configuração secreta do Supabase Auth |
 
-Em **Supabase → Authentication → URL Configuration**, use `SITE_URL` e permita somente `SITE_URL/auth/confirm` como redirecionamento. Não use curingas em produção.
-
-Em **Authentication → Email / SMTP Settings**, configure um remetente e um provedor SMTP próprio, verifique o domínio e os registros exigidos pelo provedor. Mantenha a confirmação de e-mail ligada e configure senha mínima de 12 caracteres. O SMTP padrão do Supabase é limitado e não valida a entrega pública do produto. [Documentação de SMTP](https://supabase.com/docs/guides/auth/auth-smtp).
-
-Para um primeiro teste pessoal, o SMTP padrão pode enviar somente para os endereços autorizados da equipe da organização Supabase, dentro da cota do provedor. Para usuários externos, configure SMTP próprio. Não é necessário contratar Gemini, Resend ou outro serviço pago para iniciar a edição de projetos.
-
-Em **Authentication → Email Templates**, o link deve usar o hash de confirmação consumido pelo BFF:
-
-```html
-<!-- Confirm signup -->
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup">Confirmar conta</a>
-<!-- Reset password -->
-<a href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery">Recuperar acesso</a>
-```
-
-O navegador envia o hash por POST com CSRF e remove a consulta do endereço. Testar entrega, expiração, repetição do link, recuperação e logout com contas sintéticas antes da abertura pública. Confirmar a retenção/redação dos logs de acesso do provedor para que URLs de confirmação não sejam copiadas para analytics.
+A chave de sessão aceita 64 caracteres hexadecimais ou base64 canônico de exatamente 32 bytes, inclusive `generateValue` do Render. Valores fracos ou malformados são recusados. O certificado público do Supabase acompanha o executor de migrações; validação da cadeia e do hostname permanece obrigatória. Não acrescentar `rejectUnauthorized:false` nem `sslmode=no-verify`.
 
 ## Administração e oferta
 
-Cadastre e confirme as contas administrativas. Em **Supabase → SQL Editor**, atribua explicitamente o UUID correto:
+A identidade pública do responsável não cria uma conta administrativa nem confirma um e-mail. A conta da responsável deve ser cadastrada e confirmada pelo fluxo normal. Depois de conferir a titularidade, um operador atribui o cargo comercial em `norte_private.admins`; a usuária não precisa executar SQL. É obrigatório cadastrar e confirmar o segundo fator em **Meus projetos → Segundo fator** para acessar **Administração**.
 
-```sql
-insert into norte_private.admins(user_id, role)
-values ('UUID_DA_CONTA_CONFIRMADA', 'commercial');
--- Para a administração técnica, use outra conta e role 'technical'.
-```
+A prévia comercial mostra valores calculados pelo servidor. O envio de contratação continua fechado até a validação operacional da oferta; salvar pedido não cobra nem ativa plano. Alterações de preços, planos e aprovações exigem administrador autorizado com MFA recente. Não foram inventadas licenças, disponibilidade de revisores nem aprovação comercial para liberar o botão.
 
-Na aplicação, abra **Meus projetos → Segundo fator**, cadastre TOTP e confirme um código recente. Depois abra **Administração**. Metadados de perfil não atribuem cargo.
+## Recursos opcionais e limites pendentes
 
-O administrador comercial revisa preços, campanha, limites, feedbacks e pedidos e marca a oferta como validada somente após homologar o serviço. O Profissional só é ativado em pedido confirmado, por ação administrativa explícita. Não existe cobrança automática nem gateway de pagamento.
+- **IA:** desligada por padrão; ajuda local e verificações determinísticas funcionam. Gemini exige as chaves específicas de ajuda ou análise, modelo escolhido, aprovação de tratamento de dados e limites no provedor. Variáveis exatas em `.env.example`; nenhuma chamada paga foi habilitada.
+- **Avisos de pedidos:** opcionais com `RESEND_API_KEY`, `EMAIL_FROM` e `LEADS_EMAIL` no Render. Sem eles, pedidos permanecem no banco; não há promessa de e-mail enviado.
+- **Uploads/importação:** fechados até haver inspeção e isolamento operacionais. Edição manual e exemplos aprovados continuam disponíveis.
+- **Originais de normas:** dependem de licenças e ingestão conferidas; fichas e referências disponíveis não equivalem a uma licença de redistribuição.
+- **Backup hospedado:** exportação/restauração implementadas e testadas localmente; restauração entre dois projetos Supabase ainda requer destino isolado e política de retenção.
 
-O administrador técnico controla IA, geração, catálogo, evidências de licença, limite de armazenamento e alertas. Acesso técnico a um projeto requer concessão explícita; ser administrador não abre os projetos dos clientes. Consulte [FONTES_E_LICENCAS.md](FONTES_E_LICENCAS.md).
-
-## Integrações opcionais
-
-| Integração | Onde configurar | Variáveis usadas |
-| --- | --- | --- |
-| Aviso comercial por e-mail | Resend: domínio e remetente verificados; Render: Environment | `RESEND_API_KEY`, `EMAIL_FROM`, `LEADS_EMAIL` |
-| Gemini para ajuda pública | Google AI Studio / projeto Google; Render: Environment; Administração técnica: permitir IA | `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_HELP_APPROVED=true` |
-| Gemini para sugestões técnicas públicas | Aprovação separada do provedor e dos dados; Render: Environment; catálogo e projeto autorizados | `REQUIREMENTS_AI_PROVIDER=gemini`, `REQUIREMENTS_GEMINI_API_KEY`, `REQUIREMENTS_GEMINI_MODEL`, `REQUIREMENTS_AI_APPROVED=true` |
-
-Sem Resend, os pedidos continuam no banco com aviso pendente. Sem Gemini, a ajuda usa FAQ local e as demais funções continuam disponíveis. `REQUIREMENTS_AI_PROVIDER=none` é o padrão.
-
-Execute `node --env-file=.env scripts/check-integrations.cjs` para listar candidatos estáveis disponíveis na conta; confirme o modelo na [documentação oficial](https://ai.google.dev/gemini-api/docs/models). Nenhum modelo real foi escolhido sem acesso à conta. `AI_DAILY_CALL_LIMIT=100` e `AI_MAX_CONCURRENCY=2` são tetos operacionais da Norte, não cotas prometidas pelo Google. Configure também limites e alertas no projeto do provedor. Não se habilitou faturamento.
-
-A ativação de Gemini depende de validar público, idade, região e tratamento de dados segundo os [termos consultados](https://ai.google.dev/gemini-api/terms). A configuração desta versão continua recusando análise externa de projetos privados ou restritos, mesmo com plano pago.
-
-## Backup e homologação
-
-Somente no terminal operacional: `BACKUP_DATABASE_URL`, `BACKUP_ENCRYPTION_KEY`, `BACKUP_DIRECTORY`, além das credenciais Supabase do servidor. A chave de backup é independente da chave de sessão. Restauração utiliza `RESTORE_DATABASE_URL`, `RESTORE_SUPABASE_URL`, `RESTORE_SUPABASE_SECRET_KEY`, `RESTORE_TARGET_ACK` e `RESTORE_DELETIONS_FILE`. Procedimento e limites em [DEPLOY_RENDER.md](DEPLOY_RENDER.md).
-
-Para testes reais, copie `.env.test.example` para `.env.test`, em um projeto exclusivo de homologação. Preencha as duas contas sintéticas e confirme `REAL_TEST_ACK`. `npm run test:real` permanece explicitamente ignorado sem essa configuração. Não usar clientes reais como fixtures.
-
-## Bloqueios atuais
-
-- Render e Supabase ainda não estão conectados; faltam configuração e homologação externa de Auth, SMTP, RLS/Storage hospedados, MFA e recuperação. Não há endereço publicado confirmado.
-- Uploads e importações de novos arquivos estão fechados no código: falta inspeção de arquivos e isolamento operacional apropriado. Selecionar um plano não libera esses caminhos.
-- Originais oficiais aguardam licença e ingestão conferida. ECSS/ISO não são redistribuídos. O PDF NASA foi usado localmente para conferir citações; sua disponibilização comercial ainda está pendente.
-- A oferta aguarda validação operacional, identidade do responsável e política organizacional de retenção/contato. O plano gratuito do Render serve à avaliação; sua suspensão por inatividade interrompe temporariamente o processamento de tarefas.
-
-Não há obrigação de habilitar Gemini ou contratar ferramentas pagas para usar edição, cronograma, rastreabilidade e documentos por modelo.
+Controles, resultados reais e simulações estão separados em [docs/seguranca/TESTES_SEGURANCA.md](docs/seguranca/TESTES_SEGURANCA.md) e [docs/seguranca/PENDENCIAS.md](docs/seguranca/PENDENCIAS.md).

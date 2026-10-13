@@ -62,7 +62,7 @@ function createApp({config = readConfig(),gateway = createGateway(config),fetche
     if (!req.signedCookies[seedCookie]) { const seed = crypto.randomBytes(24).toString('hex'); req.signedCookies[seedCookie] = seed; res.cookie(seedCookie,seed,{...cookieOptions,signed:true}); }
     let user = null; let entitlements = null; let offer = null; let role = false;
     if (gateway) { offer = await configuration(); if (req.cookies[sessionCookie]) { try { const auth = await session(req); user = {id:auth.user.id,email:auth.user.email}; entitlements = check(await auth.db.rpc('norte_usage')); role = check(await auth.db.rpc('norte_is_admin')); } catch (error) { if (error.status !== 401) { throw error; } res.clearCookie(sessionCookie,cookieOptions); } } }
-    res.json({csrfToken:csrf.generateCsrfToken(req,res),configured:Boolean(gateway),user,entitlements,offer,admin:role,privacyContact:config.privacyContact,serviceOwner:config.serviceOwner,uploadsEnabled:false,technicalAIEnabled:config.requirementsProvider !== 'none'});
+    res.json({csrfToken:csrf.generateCsrfToken(req,res),configured:Boolean(gateway),authEmailReady:config.authEmailReady,user,entitlements,offer,admin:role,privacyContact:config.privacyContact,serviceOwner:config.serviceOwner,uploadsEnabled:false,technicalAIEnabled:config.requirementsProvider !== 'none'});
   });
   app.use('/api',(req,res,next) => {
     if (['GET','HEAD','OPTIONS'].includes(req.method)) { return next(); }

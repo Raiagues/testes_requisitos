@@ -13,17 +13,17 @@ renderPlanFields = function() {
   if (quotePlan.mode !== 'test') { el('plan-fields').querySelector('.n-first-order')?.remove(); const label = el('plan-fields').querySelector('.n-discount-label'); if (label) { label.textContent = 'Campanha na parcela elegível'; } el('plan-fields').insertAdjacentHTML('afterbegin',`<label class="n-check"><input type="checkbox" data-choice="subscription" ${quotePlan.subscription ? 'checked' : ''}><span>Software Profissional<small>Assinatura separada dos serviços e da revisão humana. Disponibilidade após validação operacional.</small></span></label>`); }
 };
 renderPrice = function() {
-  clearTimeout(commercialTimer); commercialQuote = null;
+  clearTimeout(commercialTimer); commercialQuote = null; commercialToken = ''; el('continue-order').disabled = true;
   if (quotePlan.mode === 'test') { el('price-summary').innerHTML = '<h3>Aurora · exploração gratuita</h3><p class="platform-note">Sem conta para navegar. Crie uma conta para salvar seu projeto no Essencial. O teste avançado de 14 dias é ativado separadamente.</p>'; el('continue-order').textContent = 'Abrir Aurora'; el('continue-order').disabled = false; return; }
   el('price-summary').innerHTML = '<p>Conferindo a configuração…</p>'; el('continue-order').textContent = 'Continuar com esta configuração'; el('continue-caption').textContent = 'A próxima etapa confirma contato e valores. Nenhum pagamento é processado.';
   commercialTimer = setTimeout(async () => {
     try {
       if (!platform.configured) { throw new Error('A oferta aguarda configuração e validação operacional.'); }
       const selection = commercialSelection(); const selected = JSON.stringify(selection); const result = await api('/api/quote','POST',selection); if (selected !== JSON.stringify(commercialSelection())) { return; }
-      if (!result.available) { throw new Error('A oferta aguarda validação operacional de valores e funções.'); }
-      commercialQuote = result.quote; commercialToken = result.quoteToken; const q = result.quote;
+      if (result.available) { commercialQuote = result.quote; commercialToken = result.quoteToken; } const q = result.quote;
       const lines = [q.renewalCents ? priceLine('Primeira mensalidade',cents(q.firstMonthlyCents),`${q.discountPercent}% somente na primeira mensalidade`) + priceLine('Mensalidades seguintes',cents(q.renewalCents),'Software; sem revisor externo incluído') : '',priceLine('Preparação e adicionais digitais',cents(q.eligibleCents)),priceLine('Revisão humana e devolutiva',cents(q.humanCents),'Disponibilidade e escopo a confirmar'),priceLine('Desconto dos serviços', '− ' + cents(q.discountCents),'Base elegível: ' + cents(q.eligibleCents)),priceLine('Implantação',cents(q.setupCents),q.infrastructurePending ? 'Sujeita a avaliação, não provisionada' : 'Sem infraestrutura adicional'),priceLine('Total avulso',cents(q.oneTimeCents)),q.infrastructureMonthlyCents ? priceLine('Hospedagem mensal',cents(q.infrastructureMonthlyCents),'Separada da assinatura') : ''].join('');
-      el('price-summary').innerHTML = `<h3>Sua configuração</h3><div class="n-price-lines">${lines}</div><p class="platform-note">Oferta válida até ${new Date(q.validUntil).toLocaleDateString('pt-BR')}. ${q.feedbackApplied ? 'Benefício de feedback aplicado, independentemente da avaliação.' : 'Uma avaliação de uso elegível substitui o desconto inicial pelo de 60%.'} Não há cobrança automática.</p>`; el('continue-order').disabled = false;
+      const availability = result.available ? 'Oferta válida até ' + new Date(q.validUntil).toLocaleDateString('pt-BR') + '.' : 'Prévia de valores. A contratação será liberada após a validação operacional da oferta.';
+      el('price-summary').innerHTML = `<h3>Sua configuração</h3><div class="n-price-lines">${lines}</div><p class="platform-note">${availability} ${q.feedbackApplied ? 'Benefício de feedback aplicado, independentemente da avaliação.' : 'Uma avaliação de uso elegível substitui o desconto inicial pelo de 60%.'} Não há cobrança automática.</p>`; el('continue-order').disabled = !result.available;
     } catch (error) { el('price-summary').textContent = error.message; el('continue-order').disabled = true; }
   },250);
 };

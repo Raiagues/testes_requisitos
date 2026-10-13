@@ -38,3 +38,14 @@ test('resposta técnica manipulada na rota real não grava nem executa ações',
   const {agent,token} = await bootstrap(app); const response = await agent.post('/api/projects/' + A + '/analyse').set('Cookie','norte-session=synthetic-session').set('Origin',config.siteUrl).set('X-CSRF-Token',token).send({version:1}); assert.equal(response.status,422); assert.equal(calls,1); assert.deepEqual(fake.actions,[]); assert.doesNotMatch(response.text,/fictional-secret|update prices|synthetic-tech-secret/);
 });
 test('uploads fechados mesmo com tipo falso ou estrutura ativa',async () => { const fake = fakeGateway(); const app = createApp({config,gateway:fake.gateway}); const {agent,token} = await bootstrap(app); const response = await agent.post('/api/projects/' + A + '/uploads').set('Cookie','norte-session=synthetic-session').set('Origin',config.siteUrl).set('X-CSRF-Token',token).send({filename:'../active.pdf',mime:'application/pdf',contents:'<script>evil</script>'}); assert.equal(response.status,503); assert.deepEqual(fake.actions,[]); });
+test('e-mail não configurado ou falha de SMTP não finge enviar confirmação; login continua disponível',async () => {
+  const fake = fakeGateway(); const original = fake.gateway.fresh; let providerCalls = 0;
+  const unavailable = async () => { providerCalls += 1; return {error:{code:'email_address_not_authorized',message:'provider-secret-do-not-return'}}; };
+  fake.gateway.fresh = () => { const client = original(); Object.assign(client.auth,{signUp:unavailable,resetPasswordForEmail:unavailable}); return client; };
+  for (const ready of [false,true]) {
+    const app = createApp({config:{...config,authEmailReady:ready},gateway:fake.gateway}); const {agent,token} = await bootstrap(app); const headers = {Origin:config.siteUrl,'X-CSRF-Token':token};
+    for (const kind of ['signup','recover']) { const response = await agent.post('/api/auth/' + kind).set(headers).send({email:'fixture@example.invalid',...(kind === 'signup' ? {password:'synthetic-password'} : {})}); assert.equal(response.status,503); assert.equal(response.body.error,'auth_email_unavailable'); assert.doesNotMatch(response.text,/provider-secret|email_address_not_authorized/); }
+    assert.equal(providerCalls,ready ? 2 : 0);
+    assert.equal((await agent.post('/api/auth/login').set(headers).send({email:'fixture@example.invalid',password:'synthetic-password'})).status,200);
+  }
+});

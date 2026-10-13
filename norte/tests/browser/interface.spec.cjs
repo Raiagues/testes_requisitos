@@ -37,6 +37,22 @@ test('login em diálogo interno, sem janela nova ou token em localStorage',async
   await page.goto('/'); await page.locator('#account-button').click(); await expect(page.locator('#account-page')).toBeVisible();
   const keys = await page.evaluate(() => Object.keys(localStorage)); expect(keys.every(key => key === 'norte.theme.v2')).toBe(true);
 });
+test('login configurado aparece; SMTP pendente explica apenas cadastro e recuperação',async ({page}) => {
+  await page.route('**/api/bootstrap',route => route.fulfill({json:{csrfToken:'synthetic',configured:true,authEmailReady:false,user:null,offer:null}}));
+  await page.goto('/'); await expect.poll(() => page.evaluate(() => platform.configured)).toBe(true); await page.locator('#account-button').click();
+  await expect(page.locator('[data-platform-form="login"] input[name="password"]')).toBeVisible();
+  await page.locator('#account-page [data-platform="signup"]').click(); await expect(page.locator('#account-page')).toContainText('O envio de e-mails está sendo preparado'); await expect(page.locator('[data-platform-form="signup"]')).toHaveCount(0);
+  await page.locator('#account-page [data-platform="login"]').click(); await expect(page.locator('[data-platform-form="login"]')).toBeVisible();
+});
+test('prévia comercial mantém os valores visíveis sem liberar contratação pendente',async ({page}) => {
+  await page.route('**/api/bootstrap',route => route.fulfill({json:{csrfToken:'synthetic',configured:true,authEmailReady:false,user:null,offer:null}}));
+  await page.route('**/api/events',route => route.fulfill({json:{ok:true}}));
+  const quote = {version:1,eligibleCents:89000,humanCents:0,discountCents:35600,setupCents:0,oneTimeCents:53400,feedbackApplied:false,validUntil:'2026-12-01T00:00:00Z'};
+  await page.route('**/api/quote',route => route.fulfill({json:{quote,available:false,quoteToken:'synthetic-unavailable'}}));
+  await page.goto('/'); await expect.poll(() => page.evaluate(() => platform.configured)).toBe(true); await page.evaluate(() => goConfigure()); await page.getByText('Para meu projeto',{exact:true}).click();
+  await expect(page.locator('#price-summary')).toContainText('534,00'); await expect(page.locator('#price-summary')).toContainText('Prévia de valores'); await expect(page.locator('#continue-order')).toBeDisabled();
+  expect(await page.evaluate(() => commercialQuote)).toBeNull(); expect(await page.evaluate(() => commercialToken)).toBe('');
+});
 test('navegação por teclado, foco e movimento reduzido',async ({page}) => {
   await page.emulateMedia({reducedMotion:'reduce'}); await page.goto('/'); await page.keyboard.press('Tab'); await expect(page.locator('.brand')).toBeFocused();
   await page.evaluate(() => showModule('schedule')); const marker = page.locator('.life-marker').first(); await marker.focus(); await page.keyboard.press('Enter'); await expect(page.locator('#life-review-detail')).toBeVisible();

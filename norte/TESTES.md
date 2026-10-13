@@ -62,3 +62,23 @@ A [CI 38398212516](https://github.com/Raiagues/testes_requisitos/actions/runs/38
 O YAML foi lido com PyYAML e comparado à versão anterior: a única alteração de configuração é `services[0].name`, de `norte` para `testes-requisitos`. Confirmados um único serviço, plano Free e preservação integral das demais opções; `git diff --check` passou. Não foi executada operação na API/painel do Render nem migração em Supabase hospedado. As capturas de login/configurador mostram bloqueios de configuração, não comprovam a conclusão das integrações. Nenhuma autorização ou proteção foi removida para esconder essas pendências.
 
 A [CI 38399889707](https://github.com/Raiagues/testes_requisitos/actions/runs/38399889707) concluiu com sucesso para `b00c4063a5fc5391f9c169abeeeda778278fce56`, incluindo build, check, auditoria/segredos, testes de aplicação, PostgreSQL temporário, navegador e smoke Docker. O arquivo local `.env` foi validado apenas quanto ao formato hexadecimal de 64 caracteres e à permissão 0600; seu conteúdo não foi incluído nos relatórios. Nenhuma integração externa real foi habilitada por essa mudança.
+
+## 2026-10-13 — configuração e Supabase real
+
+`npm run migrate` aplicou `001`–`008` no projeto autorizado com cadeia e hostname TLS verificados; repetição passou sem reaplicar seeds. Confirmados via API o ID do projeto, o ID/repositório/plano do serviço Render e seu endereço real. Configuração Auth mantém confirmação, senha mínima de 12 e redirect exato. A API recusou templates sem SMTP próprio; essa limitação foi tratada, sem desligar confirmação.
+
+A suíte `tests/real/hosted.test.cjs` passou contra **Supabase hospedado real com BFF local**. Comando operacional, no projeto isolado autorizado:
+
+```bash
+RUN_HOSTED_SMOKE=true REAL_TEST_ACK=HOST_DO_PROJETO node --env-file=.env --test tests/real/hosted.test.cjs
+```
+
+Ela cria fixtures sintéticas, não envia e-mails, usa Auth/RLS/PostgreSQL/Storage reais e remove suas contas/projetos/arquivos no `finally`. Um manifesto privado em `test-results` permite identificar fixtures caso a limpeza seja interrompida. Não altera dados ou contas preexistentes, configurações comerciais nem controles de IA. O cargo administrativo só é atribuído à conta sintética recém-criada.
+
+Verificações: login/CSRF/cookies; criação e salvamento com Unicode; conflito; acesso alheio via rotas/RPC/PostgREST; tentativa de alterar owner/plano/aprovação; promoção via metadados recusada; MFA TOTP; administrador sem acesso ao projeto; geração e persistência de PDF; idempotência; Storage privado e URL pública negada; GET/HEAD/Range; concessão e revogação imediata; tokens reais de confirmação/recuperação e repetição recusada; troca de senha revogando sessões; logout. Links gerados pelo administrador **não comprovam entrega SMTP**.
+
+O ensaio detectou e motivou correções no schema de mapas parciais de perfil e no tratamento de sessão SQL vazia. As regressões passaram. Não se alteraram políticas para acomodar fixtures. A tentativa de compartilhar no Essencial retornou a negação esperada; o teste ativa o trial pelo endpoint normal antes da concessão.
+
+PostgreSQL local: 28 testes de permissões/concorrência e uma restauração isolada passaram. A primeira tentativa do container falhou com `ECONNRESET` antes das migrações; repetida isoladamente, concluiu sem mudanças nas proteções. Navegador: 13 de 14 passaram na primeira execução; o primeiro carregamento excedeu 30s sob carga. O caso 1366x768 foi repetido isoladamente e passou com os mesmos limites, completando os 14 casos. Incluem login configurado e prévia comercial com contratação ainda bloqueada. Auditoria npm: zero vulnerabilidades reportadas.
+
+Validação final do código desta etapa: build passou; 50 arquivos passaram sintaxe/ESLint; 55 testes de aplicação e segurança passaram; varredura de arquivos, build e histórico acessível não encontrou padrões de segredos. Blueprint validado localmente com um único serviço Free, origem do próprio serviço e chave secreta fora do YAML. Imagem Docker construída (`cf6446192e858bfd4035648a0573076b882b5f295d8740731a0b480cf55ad3ed`); smoke PDF/DOCX/ZIP passou com usuário não root, filesystem readonly, rede externa ausente, sem `.env` e sem fontes internas de teste. A primeira execução do smoke não alcançou o servidor dentro dos 2s de inicialização; repetida sem alterar limites ou opções, passou. Isso registra a instabilidade inicial da máquina, sem ocultar a tentativa falha.

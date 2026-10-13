@@ -14,19 +14,22 @@ services:
       - key: NODE_ENV
         value: production
       - key: SITE_URL
-        sync: false
+        fromService:
+          type: web
+          name: testes-requisitos
+          envVarKey: RENDER_EXTERNAL_URL
       - key: SESSION_ENCRYPTION_KEY
-        sync: false
+        generateValue: true
       - key: SUPABASE_URL
-        sync: false
+        value: https://pdkceggaucuanisybbak.supabase.co
       - key: SUPABASE_PUBLISHABLE_KEY
-        sync: false
+        value: sb_publishable_p_q911S_30e4vLUCQQK1ug_Wlv2pGQm
       - key: SUPABASE_SECRET_KEY
         sync: false
       - key: SERVICE_OWNER
-        sync: false
+        value: Norte
       - key: PRIVACY_CONTACT
-        sync: false
+        value: nortetestesoficial@gmail.com
       - key: REQUIREMENTS_AI_PROVIDER
         value: none
       - key: GEMINI_HELP_APPROVED

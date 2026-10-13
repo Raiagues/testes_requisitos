@@ -33,7 +33,7 @@ function createGateway(config) {
     if (sessionLocks.has(id)) { return sessionLocks.get(id); }
     const promise = (async () => {
       const row = await rpc('norte_session',{p_action:'get',p_id:hash(id)});
-      if (!row) { throw new AppError('session_expired',401); }
+      if (!row || row.id !== hash(id) || !row.user_id || typeof row.encrypted_tokens !== 'string') { throw new AppError('session_expired',401); }
       let tokens = decrypt(row.encrypted_tokens,config.sessionKey);
       const authClient = fresh();
       if (tokens.expires_at * 1000 < Date.now() + 60000) {

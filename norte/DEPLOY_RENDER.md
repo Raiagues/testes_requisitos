@@ -23,7 +23,7 @@ O executor local tem uma falha de sandbox anterior ao início dos comandos e a r
 
 ## Banco
 
-Configure a conexão com TLS em `MIGRATION_DATABASE_URL`, somente na máquina operacional, e execute `npm run migrate`. O executor registra SHA-256 de cada migração e recusa uma migração já aplicada cujo conteúdo tenha mudado. Repetir o comando não duplica seeds. Migrações `001` a `008` criam os dados Norte, funções, permissões, buckets privados, limites e citações. Não substituem o serviço Auth/Storage do Supabase.
+A conexão `MIGRATION_DATABASE_URL` foi configurada no arquivo privado local e as oito migrações foram aplicadas ao Supabase real em 13/10/2026. `npm run migrate` foi repetido sem duplicar registros. O executor utiliza a CA pública oficial do Supabase, além da cadeia padrão do Node, e exige validação do certificado e hostname. Origem e fingerprint da CA em `scripts/certificates/README.md`. A conexão e a senha não aparecem no diagnóstico de erro. O executor registra SHA-256 de cada migração e recusa uma migração já aplicada cujo conteúdo tenha mudado. Repetir o comando não duplica seeds. Migrações `001` a `008` criam os dados Norte, funções, permissões, buckets privados, limites e citações. Não substituem o serviço Auth/Storage do Supabase.
 
 O teste `test:db` usa um PostgreSQL efêmero com contratos locais para `auth.uid()`, papéis e tabelas de Storage. Esses contratos **não** são migrações de produção. Nunca aplique `supabase/tests/bootstrap.sql` no Supabase.
 
@@ -33,19 +33,21 @@ Não armazene `MIGRATION_DATABASE_URL` nem `BACKUP_DATABASE_URL` no serviço web
 
 Este repositório define somente o serviço **testes-requisitos**, com plano Free. O serviço **norte** que já existia no Render é outro protótipo e não deve ser associado a este repositório, receber suas variáveis ou ser renomeado. A pasta `norte/` continua sendo o diretório do código; isso não determina o nome do serviço no Render.
 
-No Blueprint já ligado a `Raiagues/testes_requisitos`, use **Manual Sync** para carregar o `render.yaml` corrigido se a sincronização ainda não ocorreu. A definição deve criar **testes-requisitos**, sem instruções para atualizar **norte**. Se estiver criando um Blueprint pela primeira vez, use **New → Blueprint**, repositório `Raiagues/testes_requisitos`, branch `main`, caminho `render.yaml` e nome `testes-requisitos`; se houver correspondência com um protótipo diferente, escolha **Create all as new services**. Não crie um segundo Blueprint para um serviço que já esteja gerenciado pelo primeiro.
+O serviço existente foi identificado pela API e suas variáveis foram preenchidas automaticamente. Não é necessário criar outro serviço, copiar sete variáveis nem associar o protótipo antigo. `scripts/setup-cloud.cjs` fixa o ID do alvo e recusa nome, repo, branch, raiz, runtime ou plano divergentes. `npm run setup:cloud -- plan` só consulta; `apply` configura este serviço e o Auth do Supabase correto. Veja o único campo pendente de SMTP em [CONFIGURACAO_FINAL.md](CONFIGURACAO_FINAL.md).
 
-Abra exclusivamente **testes-requisitos → Environment**, preencha os sete valores de [CONFIGURACAO_FINAL.md](CONFIGURACAO_FINAL.md) e clique em **Save, rebuild, and deploy**. O comando de início vazio é esperado, pois o Dockerfile define a inicialização. `sync: false` não adiciona segredos em atualizações de um Blueprint existente. [Variáveis secretas no Blueprint](https://render.com/docs/blueprint-spec#prompting-for-secret-values).
+Para publicar um commit já testado e enviado ao GitHub, definir `DEPLOY_COMMIT` com o SHA completo e executar `npm run setup:cloud -- deploy`. A automação registra o identificador da implantação no `.env` privado. Conferir status `live`, SHA publicado, `/api/ready` e o teste hospedado. `revoke-previous-key` só revoga a chave substituída depois de conferir a variável remota, a implantação registrada e prontidão.
+
+O Blueprint obtém a origem a partir do próprio serviço e permite chave de sessão gerada pelo Render em base64; o servidor valida exatamente 32 bytes. `sync: false` continua indicando segredo a preencher na criação; atualizações de segredos do serviço existente são feitas pela API, sem valores no Git. [Variáveis no Blueprint](https://render.com/docs/blueprint-spec).
 
 `autoDeployTrigger: off` desliga deploys automáticos do código do serviço. A sincronização do Blueprint é uma configuração separada do Render e pode aplicar alterações em `render.yaml`. O serviço escuta `0.0.0.0:$PORT`. [Funcionamento dos Blueprints](https://render.com/docs/infrastructure-as-code).
 
-A associação anterior ao serviço `norte`, confirmada pelo usuário, pode já ter aplicado mudanças nele. A remoção dessa definição do Blueprint não restaura configurações anteriores e não exclui o serviço. Não foram executados rollback, exclusão nem alteração de chaves do protótipo antigo; seu estado remoto não foi verificado por falta de acesso ao painel/API.
+A associação anterior ao serviço `norte`, confirmada pelo usuário, pode já ter aplicado mudanças nele. A remoção dessa definição do Blueprint não restaura configurações anteriores e não exclui o serviço. Não foram executados rollback, exclusão nem alteração de chaves do protótipo antigo; seu estado remoto não foi consultado nem alterado nesta configuração, por orientação expressa da usuária.
 
 - Saúde: `/api/health`, sem dados sensíveis.
 - Prontidão: `/api/ready`, verifica configuração e acesso ao banco; precisa responder 200 antes da abertura das contas.
 - Interface e API têm a mesma origem. Não é necessário CORS para outras origens.
 - Sessões, cotas, tarefas, pedidos e arquivos residem no Supabase. O disco temporário do Render só contém processos e dados transitórios.
-- Verifique o hostname real antes de preencher `SITE_URL` e os redirecionamentos do Auth. Nenhum endereço `onrender.com` foi inventado.
+- Verifique o hostname real antes de preencher `SITE_URL` e os redirecionamentos do Auth. O endereço `https://testes-requisitos.onrender.com` foi obtido diretamente do serviço autorizado na API do Render.
 
 `trust proxy` permanece `false`: cookies Secure dependem do ambiente e URLs usam somente `SITE_URL`, nunca os cabeçalhos encaminhados. Isso impede falsificação de `X-Forwarded-*`, mas o limite por IP pode agregar visitantes sob o proxy do Render. Os limites por conta e globais permanecem no banco. Antes de ampliar o tráfego, conferir o caminho real do proxy e seus cabeçalhos em homologação; não alterar para `true` indiscriminadamente. [Express atrás de proxy](https://expressjs.com/en/guide/behind-proxies/).
 

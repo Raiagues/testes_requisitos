@@ -1,6 +1,6 @@
 # Comunicação de falhas
 
-Não publique chaves, documentos privados ou dados de clientes em issues. Use o canal privado de segurança do repositório se estiver habilitado, ou o contato real do responsável configurado em `PRIVACY_CONTACT`. Esse contato ainda precisa ser definido; não há endereço inventado nesta entrega.
+Não publique chaves, documentos privados ou dados de clientes em issues. Use o canal privado de segurança do repositório se estiver habilitado, ou o contato real do responsável configurado em `PRIVACY_CONTACT`. O contato foi preenchido pela usuária e aparece no rodapé da aplicação. Não use comentários públicos para comunicar segredos.
 
 Informe versão, caminho afetado, passos com dados sintéticos e impacto observado. Não teste contas de terceiros nem amplie acesso para demonstrar uma falha.
 

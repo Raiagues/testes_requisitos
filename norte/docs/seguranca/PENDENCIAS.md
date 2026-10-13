@@ -1,14 +1,12 @@
 # Pendências e bloqueios de liberação
 
-Estado em 12/10/2026. A aplicação, migrações e testes locais existem. Não há implantação Render nem projeto Supabase hospedado validado nesta execução. Nenhum serviço pago foi provisionado.
+Estado em 13/10/2026. Supabase real migrado e serviço Render exclusivo configurado por API. Auth, MFA, RLS e Storage foram exercitados com fixtures sintéticas; a evidência final de publicação fica em EXECUCAO.md. Nenhum serviço pago foi provisionado. O serviço de outro protótipo chamado norte não foi operado.
 
 | Dependência externa | Efeito atual | Ação do responsável |
 | --- | --- | --- |
-| Supabase próprio, segredos e aplicação das migrações | Contas/projetos persistentes indisponíveis sem configuração | Preencher variáveis e executar `npm run migrate`, conforme `CONFIGURACAO_FINAL.md` |
-| Render conectado, origem HTTPS e deploy | Sem URL publicada | Criar o Blueprint gratuito, preencher Environment e validar `/api/ready` |
-| SMTP do Auth e domínio de envio | Cadastro público e recuperação não homologados | Configurar remetente, templates TokenHash e URLs permitidas; testar entrega real |
-| Administradores, TOTP, responsável e contato reais | Oferta não liberada | Atribuir papéis por UUID no banco, cadastrar MFA, preencher `SERVICE_OWNER`/`PRIVACY_CONTACT` e revisar a oferta |
-| Homologação de Supabase/Render | Sem evidência de isolamento/recuperação nos serviços hospedados | Executar testes reais com contas sintéticas, incluindo Auth, Storage, MFA, reinício e restore |
+| SMTP do Auth | Cadastro público e recuperação fechados enquanto SMTP/templates não estiverem prontos | Preencher somente `AUTH_SMTP_PASSWORD` no `.env` local; automação configura Gmail no Supabase. Confirmar entrega real |
+| Conta administrativa e validação operacional | Prévia de valores disponível, contratação fechada | Responsável e contato já configurados. Confirmar a conta da responsável, atribuir o cargo pelo operador, cadastrar TOTP e validar oferta; nenhuma promoção por metadados |
+| Entrega SMTP, sono do Render e restauração hospedada | Não comprovados por simulação ou teste de token | Validar caixa de destino; medir retomada; usar outro Supabase vazio para restore. Auth/RLS/Storage/MFA reais têm evidências separadas |
 | Inspeção e isolamento de arquivos | Uploads/importação continuam indisponíveis por código | Definir e implementar pipeline privado aprovado antes de reabrir; não publicar bucket nem desativar a verificação |
 | Direitos sobre originais e ingestão | Apenas fichas/sínteses; leitor exato aguardando original autorizado | Resolver licença e conferir hash, edição, bytes, paginação e inspeção; ECSS/ISO sem redistribuição |
 | Provedor/modelo Gemini aprovados | Ajuda local funciona; IA externa desativada | Validar termos, público/região, modelo da conta e orçamento; habilitar somente o fluxo autorizado |

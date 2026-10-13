@@ -4,6 +4,7 @@ const crypto = require('node:crypto');
 const {Client} = require('pg');
 const {createClient} = require('@supabase/supabase-js');
 const {migrate} = require('./migrate.cjs');
+const {databaseOptions} = require('./database-connection.cjs');
 const TABLES = ['auth.users','auth.identities','public.norte_config','public.norte_accounts','norte_private.admins','norte_private.storage_limits','public.norte_projects','public.norte_access','public.norte_requirements','public.norte_verifications','public.norte_links','public.norte_versions','public.norte_sources','public.norte_source_access','public.norte_citations','public.norte_source_adoptions','public.norte_jobs','norte_private.usage','public.norte_analyses','public.norte_feedback','public.norte_orders','norte_private.outbox','public.norte_controls','public.norte_audit','public.norte_events','public.norte_alerts'];
 const digest = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 function seal(value,key) { if (!/^[a-f0-9]{64}$/i.test(key || '')) { throw new Error('Configure uma chave de backup de 32 bytes.'); } const iv = crypto.randomBytes(12); const cipher = crypto.createCipheriv('aes-256-gcm',Buffer.from(key,'hex'),iv); const body = Buffer.concat([cipher.update(JSON.stringify(value),'utf8'),cipher.final()]); return Buffer.concat([Buffer.from('NORTE-B1'),iv,cipher.getAuthTag(),body]); }
@@ -61,7 +62,7 @@ async function main() {
   if (!url) { throw new Error('Configure a conexão operacional do banco.'); }
   const target = new URL(url);
   if (restoring && (env.RESTORE_TARGET_ACK !== target.hostname || env.RESTORE_SUPABASE_URL === env.SUPABASE_URL || !env.RESTORE_DELETIONS_FILE)) { throw new Error('Destino isolado e registro recente de exclusões são obrigatórios.'); }
-  const client = new Client({connectionString:url,ssl:{rejectUnauthorized:true}}); await client.connect();
+  const client = new Client(databaseOptions(url,{})); await client.connect();
   try {
     if (process.argv[2] === 'deletions') { const deleted = (await client.query('select id from norte_projects where deleted_at is not null')).rows.map(row => row.id); fs.writeFileSync(process.argv[3],seal({createdAt:new Date().toISOString(),deletedIds:deleted},env.BACKUP_ENCRYPTION_KEY),{mode:0o600,flag:'wx'}); return; }
     const storage = storageAdapter(restoring ? env.RESTORE_SUPABASE_URL : env.SUPABASE_URL,restoring ? env.RESTORE_SUPABASE_SECRET_KEY : env.SUPABASE_SECRET_KEY);

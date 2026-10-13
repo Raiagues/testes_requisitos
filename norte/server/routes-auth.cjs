@@ -5,7 +5,9 @@ module.exports = function authRoutes(app,h) {
   const {gateway,config,limited,authenticated,audit,sessionCookie,cookieOptions} = h;
   app.post('/api/auth/signup',async (req,res) => {
     const input = schema.login.parse(req.body); await limited(req,'signup',5);
-    await gateway.fresh().auth.signUp({...input,options:{emailRedirectTo:config.siteUrl + '/auth/confirm'}});
+    if (!config.authEmailReady) { throw new AppError('auth_email_unavailable',503); }
+    const result = await gateway.fresh().auth.signUp({...input,options:{emailRedirectTo:config.siteUrl + '/auth/confirm'}});
+    if (result.error && result.error.code !== 'user_already_exists') { throw new AppError('auth_email_unavailable',503); }
     await audit(req,'signup_requested'); res.json({message:'Se o endereço puder ser cadastrado, você receberá a confirmação por e-mail.'});
   });
   app.post('/api/auth/login',async (req,res) => {
@@ -17,7 +19,9 @@ module.exports = function authRoutes(app,h) {
   });
   app.post('/api/auth/recover',async (req,res) => {
     const input = schema.z.strictObject({email:schema.z.email().max(200)}).parse(req.body); await limited(req,'recover',5);
-    await gateway.fresh().auth.resetPasswordForEmail(input.email,{redirectTo:config.siteUrl + '/auth/confirm'});
+    if (!config.authEmailReady) { throw new AppError('auth_email_unavailable',503); }
+    const result = await gateway.fresh().auth.resetPasswordForEmail(input.email,{redirectTo:config.siteUrl + '/auth/confirm'});
+    if (result.error && result.error.code !== 'user_not_found') { throw new AppError('auth_email_unavailable',503); }
     await audit(req,'recovery_requested'); res.json({message:'Se o endereço estiver cadastrado, você receberá as instruções por e-mail.'});
   });
   app.post('/api/auth/confirm',async (req,res) => {

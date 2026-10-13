@@ -28,3 +28,7 @@ Eventos têm retenção de 90 dias, auditoria de 180 dias e alertas de 90 dias. 
 ## Retomar
 
 Adicionar regressão que reproduza a falha, executar testes relevantes e obter evidência no serviço real afetado. Reabrir somente aquele fluxo quando a causa estiver corrigida. Registrar duração, impacto confirmado, dados potencialmente envolvidos, ações e lacunas restantes. Comunicação aos envolvidos cabe ao responsável real do serviço, sem contato ou prazo legal inventado por esta implementação.
+
+## Substituição da chave desta configuração
+
+Uma chave secreta do Supabase foi enviada pela usuária na conversa. Não foi copiada para documentação, Git, build ou navegador. A automação cria uma substituta, grava-a no `.env` privado e no Environment do serviço exclusivo, publica um commit validado e verifica o serviço antes de revogar a chave anterior. `revoke-previous-key` exige correspondência da chave remota, ID/SHA de uma implantação `live` e prontidão; o resultado efetivo da revogação é registrado em EXECUCAO.md. Tokens de gestão podem ser revogados nos respectivos painéis ao encerrar a manutenção; sua revogação não deve derrubar o web service porque ele não os recebe.
