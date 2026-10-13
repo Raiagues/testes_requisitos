@@ -54,3 +54,5 @@ Os comandos para esses testes e suas variáveis estão em `.env.test.example`, [
 ## 2026-10-13 — Blueprint do plano gratuito
 
 Após a rejeição de `maxShutdownDelaySeconds` pelo painel do Render, o campo foi removido. Leitura do YAML com PyYAML passou, conferindo um único serviço, `plan: free`, `rootDir: norte` e ausência do campo incompatível; `git diff --check` passou. Essa checagem local não substitui a validação do Blueprint e a publicação no Render. O envio da alteração em `render.yaml` aciona novamente a suíte de CI existente.
+
+A [CI 38398212516](https://github.com/Raiagues/testes_requisitos/actions/runs/38398212516) concluiu com sucesso para o commit `6a0c18ffddfbaca8d19554f535d0d0c3db5edca9`: build, análise estática, varredura de segredos, auditoria npm, testes de aplicação/banco/navegador e build/smoke Docker. Isso não comprova a configuração das integrações hospedadas. O painel enviado pelo usuário passou a exibir a revisão do Blueprint e a associação ao serviço existente, sem o erro anterior; a aplicação efetiva e o deploy ainda precisam ser confirmados no Render.

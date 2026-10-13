@@ -33,6 +33,8 @@ Não armazene `MIGRATION_DATABASE_URL` nem `BACKUP_DATABASE_URL` no serviço web
 
 Crie o Blueprint a partir do repositório, preencha as variáveis de [CONFIGURACAO_FINAL.md](CONFIGURACAO_FINAL.md) e faça o deploy manual. `autoDeployTrigger: off` impede que uma atualização ainda não homologada seja publicada automaticamente. O serviço escuta `0.0.0.0:$PORT`.
 
+Se a revisão encontrar o serviço `norte` existente, selecione **Associate existing services** e aplique o Blueprint. O comando de início vazio é esperado, pois o Dockerfile define a inicialização. Confira depois **norte → Environment** e preencha somente os valores obrigatórios ausentes; `sync: false` não adiciona segredos em atualizações de um Blueprint existente. [Variáveis secretas no Blueprint](https://render.com/docs/blueprint-spec#prompting-for-secret-values).
+
 - Saúde: `/api/health`, sem dados sensíveis.
 - Prontidão: `/api/ready`, verifica configuração e acesso ao banco; precisa responder 200 antes da abertura das contas.
 - Interface e API têm a mesma origem. Não é necessário CORS para outras origens.

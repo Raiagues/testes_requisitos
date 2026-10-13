@@ -48,3 +48,5 @@ Código enviado para [Raiagues/testes_requisitos, main](https://github.com/Raiag
 ## 2026-10-13 — compatibilidade do Blueprint com Render Free
 
 O Render recusou o campo `services[0].maxShutdownDelaySeconds` durante a criação do Blueprint no plano gratuito. Removido somente esse campo opcional para usar o prazo padrão da plataforma, preservando `plan: free`, as variáveis e os controles existentes. Nenhum recurso pago foi solicitado. A configuração corrigida deve ser carregada novamente no painel do Render; a publicação ainda depende das configurações externas descritas em `CONFIGURACAO_FINAL.md`.
+
+Correção enviada em `6a0c18ffddfbaca8d19554f535d0d0c3db5edca9`, com [CI aprovada](https://github.com/Raiagues/testes_requisitos/actions/runs/38398212516). A captura posterior do usuário mostra a revisão da configuração e oferece associar o serviço `norte` existente. Orientada essa associação, seguida da conferência das variáveis em Environment; não há URL publicada confirmada nesta execução.
