@@ -50,3 +50,7 @@ A CI também concluiu análise estática, varredura do histórico Git, auditoria
 Cadastro e entrega SMTP, confirmação/reutilização de link, recuperação, JWT/refresh/MFA hospedados, Storage HTTP real com HEAD/Range, envio Resend, retomada após sono do Render e restauração entre projetos Supabase. O modelo Gemini real também não foi chamado. O teste opcional registra modelo, temperatura zero, um caso de FAQ e uma tentativa; ele não cobre os ataques simulados nem avalia proteção universal.
 
 Os comandos para esses testes e suas variáveis estão em `.env.test.example`, [CONFIGURACAO_FINAL.md](CONFIGURACAO_FINAL.md) e [docs/seguranca/TESTES_SEGURANCA.md](docs/seguranca/TESTES_SEGURANCA.md).
+
+## 2026-10-13 — Blueprint do plano gratuito
+
+Após a rejeição de `maxShutdownDelaySeconds` pelo painel do Render, o campo foi removido. Leitura do YAML com PyYAML passou, conferindo um único serviço, `plan: free`, `rootDir: norte` e ausência do campo incompatível; `git diff --check` passou. Essa checagem local não substitui a validação do Blueprint e a publicação no Render. O envio da alteração em `render.yaml` aciona novamente a suíte de CI existente.

@@ -43,6 +43,8 @@ Crie o Blueprint a partir do repositório, preencha as variáveis de [CONFIGURAC
 
 O Blueprint usa explicitamente `plan: free`, porque omitir o plano pode selecionar capacidade paga. Não provisiona recursos pagos. O plano gratuito pode dormir após inatividade, possui recursos limitados e não é promessa de operação contínua. Tarefas persistem e retomam com lease após o serviço acordar. SMTP de Auth roda no provedor, e os avisos comerciais usam HTTPS; não dependem das portas SMTP bloqueadas no Render gratuito. [Limitações](https://render.com/docs/free), [Blueprint](https://render.com/docs/blueprint-spec).
 
+Não defina `maxShutdownDelaySeconds`: o Render recusa essa personalização no plano gratuito. O Blueprint utiliza o prazo padrão da plataforma.
+
 Supabase, e-mail e Gemini têm limites e condições próprios. Validar consumo e eventual orçamento nos painéis antes de abrir vendas. Os valores do Profissional são oferta inicial editável, não prova de margem operacional. Nenhum recurso externo pago foi criado.
 
 ## Backup e restauração isolada
